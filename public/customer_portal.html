@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="glass">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>S.W.BERNHARDT</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   GLASS THEME (default)
+═══════════════════════════════════════════════ */
+[data-theme="glass"]{
+  --bg-body:linear-gradient(135deg,#e8f5ff 0%,#f0faf4 40%,#fdf0ff 100%);
+  --bg-card:rgba(255,255,255,0.65);
+  --bg-card2:rgba(255,255,255,0.45);
+  --bg-card3:rgba(255,255,255,0.30);
+  --bg-input:rgba(255,255,255,0.70);
+  --blur:blur(20px);
+  --border-color:rgba(255,255,255,0.7);
+  --border-inner:rgba(180,220,200,0.4);
+  --shadow-card:0 8px 32px rgba(0,80,40,.10),0 2px 8px rgba(0,0,0,.04);
+  --shadow-hover:0 16px 48px rgba(0,80,40,.15),0 4px 16px rgba(0,0,0,.06);
+  --shadow-btn:0 4px 16px rgba(22,160,106,.30);
+  --text-primary:#163020;
+  --text-secondary:#3a7055;
+  --text-muted:#7a9c8c;
+  --green:#16a06a;--green-lt:#e2f5ec;--green-dk:#0d7a50;
+  --red:#dc2626;--red-lt:#fef2f2;
+  --blue:#2563eb;--blue-lt:#eff4ff;
+  --amber:#d97706;--amber-lt:#fffbeb;
+  --badge-bg:rgba(22,160,106,0.12);
+  --badge-color:#0d7a50;
+  --topbar-bg:rgba(255,255,255,0.80);
+  --hero-bg:linear-gradient(135deg,rgba(255,255,255,.8) 0%,rgba(224,248,236,.7) 100%);
+  --print-bg:#fff;
+  --mode-icon:🌙;
+}
+
+/* ═══════════════════════════════════════════════
+   DARK THEME
+═══════════════════════════════════════════════ */
+[data-theme="dark"]{
+  --bg-body:linear-gradient(135deg,#050d08 0%,#0a1812 40%,#06080d 100%);
+  --bg-card:rgba(15,28,20,0.85);
+  --bg-card2:rgba(20,36,26,0.75);
+  --bg-card3:rgba(25,44,32,0.65);
+  --bg-input:rgba(20,36,26,0.80);
+  --blur:blur(20px);
+  --border-color:rgba(40,80,55,.7);
+  --border-inner:rgba(40,80,55,0.5);
+  --shadow-card:0 8px 32px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.3);
+  --shadow-hover:0 16px 48px rgba(0,0,0,.5);
+  --shadow-btn:0 4px 16px rgba(22,160,106,.25);
+  --text-primary:#d4eed8;
+  --text-secondary:#5a9a70;
+  --text-muted:#3a6048;
+  --green:#22d98c;--green-lt:rgba(34,217,140,.12);--green-dk:#18b070;
+  --red:#f87171;--red-lt:rgba(248,113,113,.12);
+  --blue:#60a5fa;--blue-lt:rgba(96,165,250,.12);
+  --amber:#fbbf24;--amber-lt:rgba(251,191,36,.12);
+  --badge-bg:rgba(34,217,140,0.15);
+  --badge-color:#22d98c;
+  --topbar-bg:rgba(10,24,16,0.90);
+  --hero-bg:linear-gradient(135deg,rgba(15,30,20,.9) 0%,rgba(20,40,28,.8) 100%);
+  --print-bg:#fff;
+  --mode-icon:☀️;
+}
+
+/* ═══════════════════════════════════════════════
+   BASE
+═══════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{height:100%;scroll-behavior:smooth}
+body{
+  min-height:100%;
+  font-family:'Sarabun',sans-serif;
+  background:var(--bg-body);
+  color:var(--text-primary);
+  font-size:15px;
+  line-height:1.6;
+  transition:background .4s, color .3s;
+}
+/* Fix: background stays during scroll on mobile */
+body::before{
+  content:'';position:fixed;inset:0;
+  background:var(--bg-body);
+  z-index:-1;transition:background .4s;
+}
+
+/* ═══════════════════════════════════════════════
+   GLASS MIXIN
+═══════════════════════════════════════════════ */
+.glass{
+  background:var(--bg-card);
+  backdrop-filter:var(--blur);
+  -webkit-backdrop-filter:var(--blur);
+  border:1px solid var(--border-color);
+  border-radius:16px;
+  box-shadow:var(--shadow-card);
+  transition:all .25s;
+}
+.glass2{
+  background:var(--bg-card2);
+  backdrop-filter:var(--blur);
+  -webkit-backdrop-filter:var(--blur);
+  border:1px solid var(--border-inner);
+  border-radius:12px;
+}
+.glass3{
+  background:var(--bg-card3);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--border-inner);
+  border-radius:10px;
+}
+
+/* ═══════════════════════════════════════════════
+   LOGIN SCREEN
+═══════════════════════════════════════════════ */
+#login-screen{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:2rem 1rem;
+  flex-direction:column;gap:16px;
+}
+.login-card{
+  width:100%;max-width:380px;
+  padding:2.5rem 2rem;
+}
+.login-logo{text-align:center;margin-bottom:2rem}
+.login-logo .brand-icon{
+  font-size:48px;margin-bottom:10px;
+  display:block;filter:drop-shadow(0 4px 12px rgba(22,160,106,.3));
+}
+.login-logo h1{
+  font-size:22px;font-weight:700;
+  letter-spacing:.1em;color:var(--green);
+}
+.login-logo p{font-size:12px;color:var(--text-muted);margin-top:4px}
+
+/* Auto-login banner */
+.autologin-banner{
+  display:flex;align-items:center;gap:12px;
+  padding:1rem 1.25rem;cursor:pointer;
+  border-radius:12px;
+  background:var(--green-lt);
+  border:1.5px solid var(--green);
+  margin-bottom:1rem;
+  transition:all .15s;
+}
+.autologin-banner:hover{transform:translateY(-1px);box-shadow:var(--shadow-btn)}
+.autologin-avatar{
+  width:44px;height:44px;border-radius:50%;
+  background:var(--green);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:700;flex-shrink:0;
+}
+.autologin-info .name{font-size:14px;font-weight:600;color:var(--text-primary)}
+.autologin-info .sub{font-size:11px;color:var(--text-muted)}
+.autologin-arrow{margin-left:auto;font-size:18px;color:var(--green)}
+
+.fld{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.fld label{font-size:11px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.fld input{
+  height:48px;width:100%;
+  background:var(--bg-input);
+  backdrop-filter:blur(8px);
+  border:1.5px solid var(--border-inner);
+  border-radius:10px;padding:0 16px;
+  font-size:15px;color:var(--text-primary);
+  outline:none;font-family:'Sarabun',sans-serif;
+  transition:all .2s;
+}
+.fld input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(22,160,106,.12)}
+.fld input::placeholder{color:var(--text-muted)}
+
+.login-btn{
+  width:100%;height:50px;
+  background:var(--green);color:#fff;border:none;
+  border-radius:12px;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:'Sarabun',sans-serif;
+  letter-spacing:.02em;transition:all .2s;
+  box-shadow:var(--shadow-btn);
+}
+.login-btn:hover{background:var(--green-dk);transform:translateY(-2px);box-shadow:0 8px 24px rgba(22,160,106,.4)}
+.login-btn:active{transform:translateY(0)}
+
+.remember-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;cursor:pointer;user-select:none}
+.remember-row input{width:16px;height:16px;accent-color:var(--green);cursor:pointer}
+.remember-row span{font-size:13px;color:var(--text-secondary)}
+
+.login-err{font-size:12px;color:var(--red);text-align:center;margin-top:6px;min-height:16px}
+.login-sep{display:flex;align-items:center;gap:10px;margin:14px 0;font-size:11px;color:var(--text-muted)}
+.login-sep::before,.login-sep::after{content:'';flex:1;height:1px;background:var(--border-inner)}
+.login-contact{text-align:center;font-size:12px;color:var(--text-muted)}
+
+/* ═══════════════════════════════════════════════
+   APP
+═══════════════════════════════════════════════ */
+#cp-app{display:none;flex-direction:column;min-height:100vh}
+#cp-app.show{display:flex}
+
+/* TOPBAR */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  height:58px;
+  background:var(--topbar-bg);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border-color);
+  display:flex;align-items:center;padding:0 1.25rem;gap:10px;
+  transition:background .3s;
+}
+.topbar-brand{font-size:15px;font-weight:700;letter-spacing:.1em;color:var(--green)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.tb-avatar{
+  width:36px;height:36px;
+  background:var(--green);color:#fff;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;
+  box-shadow:0 2px 8px rgba(22,160,106,.3);
+  cursor:pointer;
+}
+.tb-name{font-size:13px;font-weight:500;color:var(--text-secondary)}
+.icon-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--bg-card2);
+  backdrop-filter:blur(8px);
+  border:1px solid var(--border-inner);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:16px;transition:all .15s;color:var(--text-primary);
+}
+.icon-btn:hover{background:var(--bg-card);transform:scale(1.08)}
+
+/* MAIN */
+.main{flex:1;padding:1.25rem 1rem 2rem;max-width:820px;margin:0 auto;width:100%}
+
+/* HERO */
+.hero-card{
+  background:var(--hero-bg);
+  backdrop-filter:var(--blur);
+  -webkit-backdrop-filter:var(--blur);
+  border:1px solid var(--border-color);
+  border-radius:20px;
+  padding:1.5rem;
+  margin-bottom:1.25rem;
+  box-shadow:var(--shadow-card);
+  position:relative;overflow:hidden;
+}
+.hero-card::after{
+  content:'';position:absolute;
+  right:-10px;bottom:-20px;
+  font-size:100px;opacity:.06;
+  pointer-events:none;
+  filter:grayscale(1);
+}
+.hero-greeting{font-size:13px;color:var(--text-muted);font-weight:500;margin-bottom:2px}
+.hero-name{font-size:22px;font-weight:700;color:var(--text-primary);margin-bottom:4px}
+.hero-meta{font-size:12px;color:var(--text-muted)}
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:1.1rem}
+.hstat{
+  background:var(--bg-card2);
+  backdrop-filter:blur(8px);
+  border:1px solid var(--border-inner);
+  border-radius:12px;padding:.85rem .9rem;
+  transition:all .2s;
+}
+.hstat:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,80,40,.1)}
+.hstat .hl{font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.hstat .hv{font-size:16px;font-weight:700;font-family:'IBM Plex Mono',monospace}
+.hstat .hv.g{color:var(--green)}
+.hstat .hv.b{color:var(--blue)}
+.hstat .hv.a{color:var(--amber)}
+
+/* SECTION TITLE */
+.sec-title{
+  font-size:11px;font-weight:700;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:.07em;
+  margin-bottom:.75rem;
+  display:flex;align-items:center;gap:8px;
+}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border-inner)}
+
+/* BILL LIST */
+.bill-list{display:flex;flex-direction:column;gap:8px}
+.bill-card{
+  background:var(--bg-card);
+  backdrop-filter:var(--blur);
+  -webkit-backdrop-filter:var(--blur);
+  border:1px solid var(--border-color);
+  border-radius:14px;
+  padding:1rem 1.1rem;
+  cursor:pointer;
+  transition:all .2s;
+  display:flex;align-items:center;gap:12px;
+  box-shadow:var(--shadow-card);
+}
+.bill-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover);border-color:var(--green)}
+.bill-card.active{border-color:var(--green);background:var(--green-lt);box-shadow:0 4px 20px rgba(22,160,106,.15)}
+.bill-icon{
+  width:40px;height:40px;
+  background:var(--green-lt);
+  border:1.5px solid var(--green);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.bill-id{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);margin-bottom:2px}
+.bill-label{font-size:13px;font-weight:600;color:var(--text-primary)}
+.bill-sub{font-size:11px;color:var(--text-muted)}
+.bill-right{margin-left:auto;text-align:right}
+.bill-net{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;color:var(--green)}
+.bill-date{font-size:10px;color:var(--text-muted);margin-top:2px}
+
+/* BILL DETAIL SHEET (slide up) */
+.detail-sheet{
+  position:fixed;inset:0;z-index:200;
+  display:none;align-items:flex-end;
+  background:rgba(0,0,0,.3);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+}
+.detail-sheet.show{display:flex}
+.detail-inner{
+  width:100%;max-width:780px;margin:0 auto;
+  background:var(--bg-card);
+  backdrop-filter:var(--blur);
+  -webkit-backdrop-filter:var(--blur);
+  border:1px solid var(--border-color);
+  border-radius:24px 24px 0 0;
+  padding:0;
+  max-height:92vh;overflow-y:auto;
+  box-shadow:0 -16px 60px rgba(0,0,0,.15);
+  animation:slideUp .3s cubic-bezier(.32,1.1,.56,1);
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:40px;height:4px;background:var(--border-inner);border-radius:2px;margin:12px auto 0}
+.sheet-head{padding:1.1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-inner)}
+.sheet-head h3{font-size:15px;font-weight:700}
+.sheet-body{padding:1.25rem}
+.detail-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0;border-bottom:1px solid var(--border-inner);
+}
+.detail-row:last-child{border-bottom:none}
+.detail-key{font-size:13px;color:var(--text-secondary)}
+.detail-val{font-size:13px;font-weight:600;font-family:'IBM Plex Mono',monospace;color:var(--text-primary)}
+.detail-val.g{color:var(--green)}
+.detail-val.r{color:var(--red)}
+.detail-val.b{color:var(--blue)}
+.detail-total{
+  background:var(--green-lt);
+  border:1.5px solid var(--green);
+  border-radius:14px;
+  padding:1rem 1.25rem;
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:8px;
+}
+.detail-total .k{font-size:15px;font-weight:700;color:var(--green-dk)}
+.detail-total .v{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:800;color:var(--green-dk)}
+.sheet-actions{
+  padding:.9rem 1.25rem 1.5rem;
+  display:flex;gap:8px;
+}
+.action-btn{
+  flex:1;height:50px;border-radius:12px;
+  font-size:14px;font-weight:600;font-family:'Sarabun',sans-serif;
+  cursor:pointer;border:none;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.action-close{background:var(--bg-card2);border:1.5px solid var(--border-inner);color:var(--text-secondary)}
+.action-close:hover{background:var(--bg-card3)}
+.action-print{background:var(--green);color:#fff;box-shadow:var(--shadow-btn)}
+.action-print:hover{background:var(--green-dk);transform:translateY(-1px)}
+.action-save{background:var(--blue);color:#fff;box-shadow:0 4px 14px rgba(37,99,235,.3)}
+.action-save:hover{filter:brightness(1.1);transform:translateY(-1px)}
+
+/* BADGE */
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--badge-bg);color:var(--badge-color)}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:3rem 1rem;color:var(--text-muted)}
+.empty .empty-icon{font-size:48px;margin-bottom:12px;opacity:.5}
+.empty p{font-size:13px}
+
+/* PRINT TEMPLATE (hidden on screen) */
+#print-template{display:none}
+.bill-print{
+  background:#fff;color:#1a1a1a;
+  font-family:'Sarabun',sans-serif;font-size:13px;line-height:1.7;
+  padding:2rem;
+}
+.bill-print h1{font-size:22px;font-weight:800;color:#0d5a30;text-align:center;letter-spacing:.08em}
+.bill-print h2{font-size:13px;text-align:center;color:#1a7a40;margin-bottom:14px}
+.bp-grid{display:grid;grid-template-columns:1fr auto;gap:12px;margin-bottom:12px}
+.bp-row{display:flex;gap:6px;margin-bottom:4px;font-size:12px}
+.bp-row .lbl{color:#666;min-width:110px}
+.bp-row .val{font-weight:600}
+.bpt{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}
+.bpt th{background:#e8f5ee;color:#0d5a30;font-weight:700;padding:8px 10px;border:1px solid #b8dcc8;text-align:center}
+.bpt td{padding:8px 10px;border:1px solid #d0ead8;text-align:right}
+.bpt td.lft{text-align:left}
+.bpt tr:nth-child(even) td{background:#f5fbf7}
+.bpt-total td{background:#dff0e8;font-weight:700;border-top:2px solid #0d5a30}
+.bp-summary{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #c0d8c8;margin-top:8px}
+.bp-net{font-size:20px;font-weight:800;color:#0d5a30}
+.bp-footer{margin-top:12px;font-size:11px;color:#888;text-align:center;border-top:1px solid #ddd;padding-top:8px}
+
+/* LOGOUT BTN */
+.logout-link{
+  background:none;border:none;cursor:pointer;
+  font-size:12px;color:var(--text-muted);
+  font-family:'Sarabun',sans-serif;
+  padding:4px 8px;border-radius:6px;transition:all .15s;
+}
+.logout-link:hover{color:var(--red);background:var(--red-lt)}
+
+/* PRINT MEDIA */
+@media print{
+  body,body::before{background:#fff!important}
+  #login-screen,#cp-app,#print-template~*{display:none!important}
+  #print-template{display:block!important}
+  .bill-print{padding:0;box-shadow:none}
+}
+@media(max-width:500px){
+  .hero-stats{grid-template-columns:1fr 1fr}
+  .hstat:last-child{grid-column:span 2}
+  .sheet-actions{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card glass">
+    <div class="login-logo">
+      <span class="brand-icon"></span>
+      <h1>S.W.BERNHARDT</h1>
+      <p>ตรวจสอบยอดอ้อยและบิลของคุณ</p>
+    </div>
+
+    <!-- Auto-login button (shown if remembered) -->
+    <div id="autologin-wrap" style="display:none" onclick="autoLogin()">
+      <div class="autologin-banner">
+        <div class="autologin-avatar" id="al-avatar">?</div>
+        <div class="autologin-info">
+          <div class="name" id="al-name">—</div>
+          <div class="sub">แตะเพื่อเข้าสู่ระบบทันที</div>
+        </div>
+        <div class="autologin-arrow">›</div>
+      </div>
+      <div class="login-sep">หรือเข้าด้วยเบอร์อื่น</div>
+    </div>
+
+    <div class="fld">
+      <label>หมายเลขโทรศัพท์</label>
+      <input type="tel" id="cp-phone" placeholder="เช่น 0932712139" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')">
+    </div>
+    <div class="fld">
+      <label>PIN (4 หลักท้ายเบอร์)</label>
+      <input type="password" id="cp-pin" placeholder="••••" maxlength="4" inputmode="numeric" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+
+    <label class="remember-row">
+      <input type="checkbox" id="cp-remember" checked>
+      <span>จดจำฉันในอุปกรณ์นี้</span>
+    </label>
+
+    <button class="login-btn" onclick="doLogin()">เข้าดูบิล ›</button>
+    <div class="login-err" id="cp-err"></div>
+    <div class="login-contact" style="margin-top:1rem">ติดต่อ: 0932712139 หากลืม PIN</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="cp-app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-brand"> SWB</div>
+    <div class="topbar-right">
+      <div class="tb-avatar" id="tb-avatar" title="โปรไฟล์">?</div>
+      <span class="tb-name" id="tb-name"></span>
+      <div class="icon-btn" onclick="toggleTheme()" id="theme-btn" title="เปลี่ยนโหมด">🌙</div>
+      <button class="logout-link" onclick="doLogout()">ออก</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- HERO -->
+    <div class="hero-card">
+      <div class="hero-greeting" id="h-greeting">ยินดีต้อนรับ</div>
+      <div class="hero-name" id="h-name">—</div>
+      <div class="hero-meta" id="h-meta">—</div>
+      <div class="hero-stats" id="h-stats"></div>
+    </div>
+
+    <!-- BILL LIST -->
+    <div class="sec-title">บิลทั้งหมด</div>
+    <div class="bill-list" id="bill-list">
+      <div class="empty"><div class="empty-icon"></div><p>ยังไม่มีบิล</p></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- DETAIL SHEET (slide up) -->
+<div class="detail-sheet" id="detail-sheet" onclick="sheetBackdropClick(event)">
+  <div class="detail-inner">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h3 id="sheet-title">—</h3>
+      <span class="badge" id="sheet-badge">—</span>
+    </div>
+    <div class="sheet-body" id="sheet-body"></div>
+    <div class="sheet-actions">
+      <button class="action-btn action-close" onclick="closeSheet()">✕ ปิด</button>
+      <button class="action-btn action-save" onclick="savePDF()">⬇ บันทึก PDF</button>
+      <button class="action-btn action-print" onclick="printSheet()">🖨 พิมพ์</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT TEMPLATE (hidden) -->
+<div id="print-template">
+  <div class="bill-print" id="print-content"></div>
+</div>
+
+<script>
+// ── API LAYER ─────────────────────────────────────────────────────────────
+const TOKEN={
+  get:()=>localStorage.getItem('swb_cust_token'),
+  set:(t)=>localStorage.setItem('swb_cust_token',t),
+  clear:()=>localStorage.removeItem('swb_cust_token')
+};
+async function api(path,options={}){
+  const t=TOKEN.get();
+  const res=await fetch(path,{
+    ...options,
+    headers:{'Content-Type':'application/json',...(t?{Authorization:'Bearer '+t}:{})},
+    body:options.body?JSON.stringify(options.body):undefined
+  });
+  if(!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+const $=id=>document.getElementById(id);
+function fmt(n,d=2){return parseFloat(n||0).toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d})}
+function fmtDate(s){
+  if(!s)return'—';const d=new Date(s);
+  const m=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return String(d.getDate())+' '+m[d.getMonth()]+' '+(d.getFullYear()+543);
+}
+function fmtDateFull(s){
+  if(!s)return'—';const d=new Date(s);
+  const months=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  return String(d.getDate()).padStart(2,'0')+' '+months[d.getMonth()]+' '+(d.getFullYear()+543);
+}
+function greeting(){
+  const h=new Date().getHours();
+  return h<12?'อรุณสวัสดิ์ 🌅':h<17?'สวัสดีตอนบ่าย ☀️':'สวัสดีตอนเย็น 🌆';
+}
+
+let currentBill=null;
+let currentCust=null;
+
+/* ── THEME ────────────────────────────────────── */
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  DB.set('theme',t);
+  $('theme-btn').textContent=t==='dark'?'☀️':'🌙';
+}
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute('data-theme');
+  setTheme(cur==='dark'?'glass':'dark');
+}
+(async function(){const t=DB.get('theme','glass');setTheme(t);}());
+
+/* ── AUTH ─────────────────────────────────────── */
+async function doLogin(){
+  const phone=$('cp-phone').value.trim();
+  const pin=$('cp-pin').value.trim();
+  if(!phone||!pin){$('cp-err').textContent='กรุณากรอกเบอร์โทรและ PIN';return;}
+  const correctPin=phone.replace(/\D/g,'').slice(-4);
+  if(pin!==correctPin){$('cp-err').textContent='PIN ไม่ถูกต้อง (4 หลักท้ายเบอร์โทร)';return;}
+  try{
+    const r=await api('/api/auth/customer',{method:'POST',body:{phone}});
+    TOKEN.set(r.token);
+    currentCust=r.customer;
+    if($('cp-remember').checked){
+      localStorage.setItem('swb_saved_phone',phone);
+      localStorage.setItem('swb_saved_name',r.customer.name);
+    }
+    showApp();
+  }catch(e){$('cp-err').textContent='ไม่พบเบอร์โทรนี้ในระบบ';}
+}
+async function autoLogin(){
+  const phone=localStorage.getItem('swb_saved_phone');
+  if(!phone)return;
+  const correctPin=phone.replace(/\D/g,'').slice(-4);
+  try{
+    const r=await api('/api/auth/customer',{method:'POST',body:{phone}});
+    TOKEN.set(r.token);currentCust=r.customer;showApp();
+  }catch{localStorage.removeItem('swb_saved_phone');}
+}
+function doLogout(){
+  currentCust=null;
+  $('cp-app').classList.remove('show');
+  $('login-screen').style.display='';
+  $('cp-pin').value='';$('cp-err').textContent='';
+  checkAutoLogin();
+}
+function showApp(){
+  $('login-screen').style.display='none';
+  $('cp-app').classList.add('show');
+  renderApp();
+}
+function checkAutoLogin(){
+  const phone=localStorage.getItem('swb_saved_phone');
+  const name=localStorage.getItem('swb_saved_name');
+  if(phone&&name){
+    $('autologin-wrap').style.display='block';
+    $('al-avatar').textContent=name.charAt(0);
+    $('al-name').textContent=name;
+  } else {
+    $('autologin-wrap').style.display='none';
+  }
+}
+
+/* ── APP RENDER ───────────────────────────────── */
+function renderApp(){
+  const c=currentCust;
+  $('tb-avatar').textContent=c.name.charAt(0);
+  $('tb-name').textContent=c.name;
+  $('h-greeting').textContent=greeting();
+  $('h-name').textContent=c.name;
+  $('h-meta').textContent='ทะเบียนรถ: '+(c.truck||'—')+'  |  '+(c.field||'')+'  |  อ้อย'+c.type;
+
+  const bills=DB.get('bills',[]).filter(b=>b.name===c.name);
+  const totalTons=bills.reduce((a,b)=>a+parseFloat(b.tons||0),0);
+  const totalGross=bills.reduce((a,b)=>a+parseFloat(b.gross||0),0);
+  const totalNet=bills.reduce((a,b)=>a+parseFloat(b.net||0),0);
+
+  $('h-stats').innerHTML=
+    hstat(' ตันรวม',fmt(totalTons,2)+' ต.','b')+
+    hstat(' รายรับรวม',fmt(totalGross)+' ฿','a')+
+    hstat('ยอดสุทธิ',fmt(totalNet)+' ฿','g');
+
+  if(!bills.length){
+    $('bill-list').innerHTML='<div class="empty"><div class="empty-icon"></div><p>ยังไม่มีบิลในระบบ<br>ติดต่อ 0932712139</p></div>';
+    return;
+  }
+  $('bill-list').innerHTML=bills.slice().reverse().map(b=>{
+    const net=parseFloat(b.net||0);
+    return '<div class="bill-card" onclick="openSheet(\''+b.id+'\')">'+
+      '<div class="bill-icon"></div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div class="bill-id">'+(b.code||'—')+'  #'+b.id+'</div>'+
+        '<div class="bill-label">'+fmtDate(b.date)+'</div>'+
+        '<div class="bill-sub">'+fmt(b.tons,2)+' ตัน &nbsp;×&nbsp; '+fmt(b.price,0)+' บาท/ตัน</div>'+
+      '</div>'+
+      '<div class="bill-right">'+
+        '<div class="bill-net">'+(net>=0?'':'-')+fmt(Math.abs(net))+'</div>'+
+        '<div class="bill-date"><span class="badge">'+b.type+'</span></div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+function hstat(label,value,cls){
+  return '<div class="hstat"><div class="hl">'+label+'</div><div class="hv '+cls+'">'+value+'</div></div>';
+}
+
+/* ── DETAIL SHEET ─────────────────────────────── */
+function openSheet(id){
+  const b=DB.get('bills',[]).find(x=>x.id===id);
+  if(!b)return;
+  currentBill=b;
+  $('sheet-title').textContent='บิล #'+b.id;
+  $('sheet-badge').textContent=b.type;
+  const deduct=(b.transport||0)+(b.fuel||0)+(b.other||0);
+  $('sheet-body').innerHTML=
+    drow('เลขที่บิล','#'+b.id)+
+    drow('วันที่',fmtDate(b.date))+
+    drow('ชื่อลูกค้า',b.name)+
+    drow('ทะเบียนรถ',b.truck||'—')+
+    drow('โค้ดค่า',b.code||'—')+
+    drow('ประเภทอ้อย',b.type)+
+    '<div style="height:1px;background:var(--border-inner);margin:4px 0"></div>'+
+    drow('น้ำหนัก',fmt(b.tons,2)+' ตัน','b')+
+    drow('ราคา/ตัน',fmt(b.price,0)+' บาท')+
+    drow('รายรับรวม (Gross)',fmt(b.gross)+' บาท','b')+
+    '<div style="height:1px;background:var(--border-inner);margin:4px 0"></div>'+
+    drow('หักค่าขนส่ง','−'+fmt(b.transport||0)+' บาท','r')+
+    drow('หักค่าน้ำมัน','−'+fmt(b.fuel||0)+' บาท','r')+
+    (b.other?drow('หักอื่นๆ','−'+fmt(b.other)+' บาท','r'):'')+
+    '<div style="height:6px"></div>'+
+    '<div class="detail-total"><span class="k">ยอดสุทธิที่ได้รับ</span><span class="v">'+fmt(b.net)+'</span></div>'+
+    (b.note?'<div style="margin-top:10px;font-size:12px;color:var(--text-muted);padding:8px 10px;background:var(--bg-card2);border-radius:8px">หมายเหตุ: '+b.note+'</div>':'');
+  $('detail-sheet').classList.add('show');
+  document.body.style.overflow='hidden';
+}
+function drow(k,v,cls){
+  return '<div class="detail-row"><span class="detail-key">'+k+'</span><span class="detail-val '+(cls||'')+'" style="font-family:\'IBM Plex Mono\',monospace">'+v+'</span></div>';
+}
+function closeSheet(){
+  $('detail-sheet').classList.remove('show');
+  document.body.style.overflow='';
+}
+function sheetBackdropClick(e){
+  if(e.target===$('detail-sheet'))closeSheet();
+}
+
+/* ── PRINT / SAVE PDF ─────────────────────────── */
+async function buildPrint(b){
+  const s=await api('/api/settings').catch(()=>({company:'S.W.BERNHARDT',address:'471 หมู่11 ทุ่งฝน อ.ทุ่งฝน จ.อุดรธานี',phone:'0932712139'}));
+  const d=new Date(b.date||Date.now());
+  const months=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  return '<h1>'+s.company+'</h1>'+
+    '<h2>ใบรับอ้อย / ค่าขนส่ง / ค่าบริการ</h2>'+
+    '<div class="bp-grid">'+
+      '<div>'+
+        '<div class="bp-row"><span class="lbl">เจ้าของอ้อย</span><span class="val">'+b.name+'</span></div>'+
+        '<div class="bp-row"><span class="lbl">ทะเบียนรถบรรทุก</span><span class="val">'+(b.truck||'—')+'</span></div>'+
+        '<div class="bp-row"><span class="lbl">เจ้าของรถ</span><span class="val">วิษณุ โอดละออ</span></div>'+
+        '<div class="bp-row"><span class="lbl">ที่อยู่</span><span class="val">บ้านทุ่งฝน อ.ทุ่งฝน จ.อุดรธานี</span></div>'+
+        '<div class="bp-row"><span class="lbl">โทรศัพท์</span><span class="val">'+s.phone+'</span></div>'+
+      '</div>'+
+      '<div style="text-align:right">'+
+        '<div class="bp-row" style="justify-content:flex-end"><span class="lbl">วันที่</span><span class="val">'+String(d.getDate()).padStart(2,'0')+'</span></div>'+
+        '<div class="bp-row" style="justify-content:flex-end"><span class="lbl">เดือน</span><span class="val">'+months[d.getMonth()]+'</span></div>'+
+        '<div class="bp-row" style="justify-content:flex-end"><span class="lbl">พ.ศ.</span><span class="val">'+(d.getFullYear()+543)+'</span></div>'+
+        '<div class="bp-row" style="justify-content:flex-end"><span class="lbl">เลขที่</span><span class="val" style="font-weight:800">'+b.id+'</span></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="bp-row"><span class="lbl">ราคาอ้อย</span><span class="val">'+fmt(b.price,0)+' บาท — '+b.type+'</span></div>'+
+    '<div class="bp-row"><span class="lbl">จำนวนตัน</span><span class="val">'+fmt(b.tons,2)+' ตัน</span></div>'+
+    '<div class="bp-row"><span class="lbl">รวม</span><span class="val">'+fmt(b.gross)+' บาท</span></div>'+
+    '<table class="bpt"><thead><tr><th>วันที่</th><th>เลขที่บิล</th><th>โค้ดค่า</th><th style="text-align:right">ตัน</th><th style="text-align:right">ขนส่ง</th><th style="text-align:right">น้ำมัน</th><th style="text-align:right">ราคา</th></tr></thead>'+
+    '<tbody><tr><td>'+fmtDateFull(b.date)+'</td><td>'+b.id+'</td><td>'+(b.code||'—')+'</td>'+
+    '<td style="text-align:right">'+fmt(b.tons,2)+'</td>'+
+    '<td style="text-align:right">'+fmt(b.transport||0)+'</td>'+
+    '<td style="text-align:right">'+fmt(b.fuel||0)+'</td>'+
+    '<td style="text-align:right">'+fmt(b.gross)+'</td></tr></tbody>'+
+    '<tfoot><tr class="bpt-total"><td colspan="3" style="text-align:left">รวมสุทธิ</td>'+
+    '<td style="text-align:right">'+fmt(b.tons,2)+'</td>'+
+    '<td style="text-align:right">'+fmt(b.transport||0)+'</td>'+
+    '<td style="text-align:right">'+fmt(b.fuel||0)+'</td>'+
+    '<td style="text-align:right">'+fmt(b.gross)+'</td></tr></tfoot></table>'+
+    '<div class="bp-summary">'+
+      '<div>'+
+        '<div class="bp-row"><span class="lbl">รวม</span><span class="val">'+fmt(b.gross)+' บาท</span></div>'+
+        '<div class="bp-row"><span class="lbl">ขนส่ง</span><span class="val">'+fmt(b.transport||0)+' บาท</span></div>'+
+        '<div class="bp-row"><span class="lbl">น้ำมัน</span><span class="val">'+fmt(b.fuel||0)+' บาท</span></div>'+
+      '</div>'+
+      '<div style="text-align:right">'+
+        '<div style="font-size:13px;color:#444;margin-bottom:2px">คงเหลือ</div>'+
+        '<div class="bp-net">'+fmt(b.net)+' บาท</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="bp-row"><span class="lbl">ผู้ให้บริการ</span><span class="val" style="font-weight:800">'+s.company+'</span>&nbsp;&nbsp;<span style="color:#555">วิษณุ โอดละออ  '+s.address+'</span></div>'+
+    (b.note?'<div style="margin-top:6px;font-size:11px;color:#666">หมายเหตุ: '+b.note+'</div>':'')+
+    '<div class="bp-footer">© '+s.company+' — พิมพ์จาก Customer Portal</div>';
+}
+async function printSheet(){
+  if(!currentBill)return;
+  $('print-content').innerHTML=await buildPrint(currentBill);
+  window.print();
+}
+async function savePDF(){
+  if(!currentBill)return;
+  $('print-content').innerHTML=await buildPrint(currentBill);
+  window.print();
+}
+/* ===== COPYRIGHT ===== */
+document.getElementById("copy-year").textContent=new Date().getFullYear();
+
+
+/* ── INIT ─────────────────────────────────────── */
+(function(){
+  // Seed demo data if empty
+  // Seed removed — data comes from API
+  if(false){
+    DB.set('customers',[{id:'C001',name:'คำเจริญ',truck:'84-7938 อด',phone:'0932712139',field:'บ้านทุ่งฝน อ.ทุ่งฝน จ.อุดรธานี',type:'ตอ',note:'ลูกค้า CUST-127'}]);
+  }
+  if(false){
+    DB.set('bills',[
+      {id:'412961',name:'คำเจริญ',truck:'84-7938 อด',date:'2026-03-10',type:'ตอ',code:'801-449',tons:10.75,price:500,gross:5375,transport:200,fuel:200,other:0,net:4975,note:''},
+      {id:'413035',name:'คำเจริญ',truck:'84-7938 อด',date:'2026-03-11',type:'ตอ',code:'801-449',tons:15.31,price:500,gross:7655,transport:200,fuel:200,other:0,net:7255,note:''},
+      {id:'413118',name:'คำเจริญ',truck:'84-7938 อด',date:'2026-03-12',type:'ตอ',code:'801-449',tons:6.77,price:500,gross:3385,transport:200,fuel:200,other:0,net:2985,note:''},
+      {id:'413117',name:'คำเจริญ',truck:'84-7938 อด',date:'2026-03-12',type:'ตอ',code:'801-449',tons:9.06,price:500,gross:4530,transport:200,fuel:200,other:0,net:4130,note:''},
+      {id:'413192',name:'คำเจริญ',truck:'84-7938 อด',date:'2026-03-13',type:'ตอ',code:'801-449',tons:5.98,price:500,gross:2990,transport:200,fuel:200,other:0,net:2590,note:''},
+      {id:'413422',name:'คำเจริญ',truck:'84-7938 อด',date:'2026-03-13',type:'ตอ',code:'801-449',tons:11.38,price:500,gross:5690,transport:200,fuel:200,other:0,net:5290,note:''},
+      {id:'413428',name:'คำเจริญ',truck:'84-7938 อด',date:'2026-03-13',type:'ตอ',code:'801-449',tons:7.21,price:500,gross:3605,transport:200,fuel:200,other:0,net:3205,note:''},
+    ]);
+  }
+  checkAutoLogin();
+}());
+</script>
+</body>
+</html>

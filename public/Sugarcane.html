@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sugarcane Cutting + คำนวณดอกเบี้ย</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;1,300&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ===== BASE ===== */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c1118;--bg2:#131a24;--bg3:#1a2333;--bg4:#212d40;
+  --border:#243040;--border2:#2e3e55;
+  --text:#dce8f4;--text2:#7a98b4;--text3:#445566;
+  --green:#3dd68c;--green-lt:#0a2a1a;
+  --amber:#f5c842;--amber-lt:#2a2208;
+  --red:#ff5f5f;--red-lt:#2a0e0e;
+  --blue:#4d9fff;--blue-lt:#0a1e38;
+  --teal:#2dd4bf;
+  --radius:12px;--radius-sm:7px;
+}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;min-height:100vh}
+.app{max-width:920px;margin:0 auto;padding:1.25rem 1rem}
+
+/* ===== NAV / PAGE SWITCHER ===== */
+.page-nav{display:flex;align-items:center;gap:0;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.5rem}
+.page-btn{flex:1;padding:13px 16px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--text2);border:none;font-family:'Sarabun',sans-serif;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.02em}
+.page-btn:first-child{border-right:1px solid var(--border)}
+.page-btn.active{background:var(--bg4);color:var(--text)}
+.page-btn .dot{width:8px;height:8px;border-radius:50%;background:var(--text3);transition:background .2s}
+.page-btn.active .dot{background:var(--green)}
+#page-loan .dot{background:none}
+#page-loan.active .dot{background:var(--blue)}
+#page-ops .dot{background:none}
+#page-ops.active .dot{background:var(--teal)}
+
+/* ===== SHARED HEADER ===== */
+.page-header{padding:1.25rem 0 1rem;border-bottom:1px solid var(--border);margin-bottom:1.5rem;display:flex;align-items:center;gap:14px}
+.page-header .icon{font-size:28px}
+.page-header h1{font-size:20px;font-weight:600;letter-spacing:-.3px}
+.page-header p{font-size:12px;color:var(--text2);margin-top:2px}
+
+/* ===== SHARED COMPONENTS ===== */
+.sec-title{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem;display:flex;align-items:center;gap:8px}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem}
+.card.green{border-color:#1a4a28}
+.card.red{border-color:#4a1818}
+.card.amber{border-color:#4a3c08}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:620px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:12px;color:var(--text2);font-weight:500}
+.fld input,.fld select{height:40px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:0 12px;font-size:14px;color:var(--text);outline:none;font-family:'Sarabun',sans-serif;transition:border-color .15s}
+.fld input:focus,.fld select:focus{border-color:var(--green)}
+.hint{font-size:11px;color:var(--text3);margin-top:1px}
+.btn{height:40px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;border:none;font-family:'Sarabun',sans-serif;transition:all .15s;letter-spacing:.01em}
+.btn-primary{background:var(--blue);color:#fff;width:100%}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-ghost{background:var(--bg3);color:var(--text2);border:1px solid var(--border);width:100%}
+.btn-ghost:hover{background:var(--bg4);color:var(--text)}
+.mc{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.85rem 1rem}
+.mc .ml{font-size:11px;color:var(--text2);font-weight:500;margin-bottom:3px}
+.mc .mv{font-size:16px;font-weight:600;font-family:'IBM Plex Mono',monospace}
+.mc .ms{font-size:11px;color:var(--text3);margin-top:3px}
+.mc.profit{border-color:#1a4a28;background:#0a2018}.mc.profit .mv{color:var(--green)}
+.mc.loss{border-color:#4a1818;background:#200a0a}.mc.loss .mv{color:var(--red)}
+.mc.warn{border-color:#4a3c08;background:#201a00}.mc.warn .mv{color:var(--amber)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{background:var(--bg3);color:var(--text2);font-weight:500;font-size:11px;padding:8px 8px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:1}
+td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--border);color:var(--text)}
+td.ctr{text-align:center}
+td.lft{text-align:left}
+tr:hover td{background:rgba(255,255,255,.02)}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:3px}
+.b-green{background:rgba(61,214,140,.15);color:var(--green)}
+.b-red{background:rgba(255,95,95,.15);color:var(--red)}
+.b-amber{background:rgba(245,200,66,.15);color:var(--amber)}
+.b-blue{background:rgba(77,159,255,.15);color:var(--blue)}
+.b-gray{background:var(--bg4);color:var(--text2)}
+.mono{font-family:'IBM Plex Mono',monospace}
+.foot-note{font-size:11px;color:var(--text3);margin-top:8px;font-style:italic;line-height:1.6}
+.div{height:1px;background:var(--border);margin:.75rem 0}
+.table-scroll{max-height:420px;overflow-y:auto;border-radius:var(--radius-sm);border:1px solid var(--border)}
+
+/* ===== PAGE 4 — CUSTOMER RECEIPT ===== */
+#page-cust .dot{background:none}
+#page-cust.active .dot{background:var(--amber)}
+.receipt{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.receipt-header{background:linear-gradient(135deg,#0a2a1a 0%,#0d3326 100%);padding:1.5rem;text-align:center;border-bottom:1px solid var(--border)}
+.receipt-header .logo{font-size:28px;margin-bottom:6px}
+.receipt-header h2{font-size:18px;font-weight:700;color:var(--green);letter-spacing:.05em}
+.receipt-header p{font-size:12px;color:var(--text2);margin-top:3px}
+.receipt-body{padding:1.25rem}
+.receipt-row{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--border)}
+.receipt-row:last-child{border-bottom:none}
+.receipt-row .rl{font-size:13px;color:var(--text2)}
+.receipt-row .rr{font-size:14px;font-weight:600;font-family:"IBM Plex Mono",monospace;color:var(--text)}
+.receipt-row .rr.positive{color:var(--green)}
+.receipt-row .rr.negative{color:var(--red)}
+.receipt-row .rr.total{font-size:20px;color:var(--green)}
+.receipt-divider{height:1px;background:var(--border2);margin:4px 0}
+.receipt-total-row{background:rgba(61,214,140,.06);padding:12px 0;margin:0 -1.25rem;padding-left:1.25rem;padding-right:1.25rem;border-top:2px solid var(--green)}
+.receipt-total-row .rl{font-size:14px;color:var(--green);font-weight:600}
+.receipt-total-row .rr{font-size:26px;color:var(--green)}
+.dept-mini{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:6px 0}
+.dept-mini-item{font-size:11px;color:var(--text3);display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)}
+.print-btn{width:100%;height:44px;background:var(--green);color:#000;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:"Sarabun",sans-serif;letter-spacing:.03em;margin-top:1rem;transition:all .15s}
+.print-btn:hover{filter:brightness(1.1)}
+@media print{
+  .page-nav,.page-header,.sec-title,#section-sc,#section-loan,#section-ops,.print-btn,.cust-inputs{display:none!important}
+  #section-cust{display:block!important}
+  body{background:#fff!important;color:#000!important}
+  .receipt{border:1px solid #ccc!important;background:#fff!important}
+  .receipt-header{background:#f0f8f0!important}
+  .receipt-header h2,.receipt-row .rl,.receipt-row .rr{color:#000!important}
+  .receipt-header p{color:#444!important}
+  .receipt-row .rr.positive,.receipt-total-row .rl,.receipt-total-row .rr{color:#1a6a1a!important}
+  .receipt-row .rr.negative{color:#aa0000!important}
+  .receipt-total-row{background:#f0fff0!important;border-top:2px solid #1a6a1a!important}
+  .dept-mini-item{color:#444!important;border-color:#ccc!important}
+}
+
+/* ===== PAGE 1 — SUGARCANE ===== */
+.slider-wrap{display:flex;flex-direction:column;gap:6px}
+.slider-wrap label{font-size:12px;color:var(--text2);font-weight:500;display:flex;justify-content:space-between}
+.slider-wrap label span{font-family:'IBM Plex Mono',monospace;color:var(--green);font-size:13px}
+input[type=range]{-webkit-appearance:none;width:100%;height:5px;background:var(--bg4);border-radius:3px;outline:none;border:none;padding:0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--green);cursor:pointer;border:2px solid var(--bg)}
+.verdict{border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1rem;border:1px solid;display:flex;align-items:center;gap:14px}
+.verdict-icon{font-size:28px;min-width:36px;text-align:center}
+.verdict.profit{background:#0a2016;border-color:#1a6030;color:#80ff80}
+.verdict.loss{background:#200a0a;border-color:#802020;color:#ff8080}
+.verdict.warn{background:#201a00;border-color:#806a00;color:#ffd060}
+.breakeven-bar{position:relative;height:26px;background:var(--bg4);border-radius:5px;overflow:hidden;margin:8px 0}
+.be-fill{position:absolute;left:0;top:0;height:100%;border-radius:5px;transition:width .4s;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:600;white-space:nowrap}
+.be-marker{position:absolute;top:0;height:100%;width:2px;background:var(--amber)}
+.be-marker-label{position:absolute;top:50%;transform:translateY(-50%);font-size:10px;color:var(--amber);white-space:nowrap;font-family:'IBM Plex Mono',monospace}
+tr.ok td{color:var(--green)}
+tr.sc-loss td{color:var(--red)}
+tr.sc-warn td{color:var(--amber)}
+tr.hl td{background:rgba(61,214,140,.07);font-weight:500}
+
+/* ===== PAGE 2 — LOAN ===== */
+.loan-tabs{display:flex;gap:4px;background:var(--bg2);border-radius:var(--radius-sm);padding:3px;margin-bottom:1rem;border:1px solid var(--border)}
+.loan-tab{flex:1;padding:7px 10px;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;background:transparent;color:var(--text2);border:none;transition:all .2s;font-family:'Sarabun',sans-serif}
+.loan-tab.active{background:var(--bg4);color:var(--text)}
+tr.paid td{color:var(--text)}
+tr.overdue td{background:rgba(42,14,14,.6)}
+tr.paid td.sc{color:var(--green)}
+tr.overdue td.sc{color:var(--red)}
+tr.tr-total td{background:var(--bg3);font-weight:600;border-top:1px solid var(--border2)}
+tr.tr-total.big td{font-size:13px;color:var(--red)}
+td.rate-ok{color:var(--green);font-weight:500}
+td.rate-warn{color:var(--amber);font-weight:500}
+td.rate-anom{color:var(--red);font-weight:600}
+.alert{border-radius:var(--radius);padding:.9rem 1.1rem;margin-bottom:1rem;border:1px solid}
+.alert-red{background:var(--red-lt);border-color:#7a1818;color:#ffaaaa}
+.alert-amber{background:var(--amber-lt);border-color:#7a5808;color:#ffcc80}
+.alert-green{background:var(--green-lt);border-color:#185a28;color:#80ffd0}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- PAGE NAVIGATION -->
+<div class="page-nav">
+  <button class="page-btn active" id="page-sc" onclick="switchPage('sc')">
+    <div class="dot"></div>&#127806; ตัดอ้อย
+  </button>
+  <button class="page-btn" id="page-loan" onclick="switchPage('loan')">
+    <div class="dot"></div>&#128178; สัญญากู้เงิน
+  </button>
+  <button class="page-btn" id="page-ops" onclick="switchPage('ops')" style="border-left:1px solid var(--border)">
+    <div class="dot" style="background:var(--teal)"></div>&#128202; ต้นทุน 4 แผนก
+  </button>
+  <button class="page-btn" id="page-cust" onclick="switchPage('cust')" style="border-left:1px solid var(--border)">
+    <div class="dot" style="background:var(--amber)"></div>&#128210; ใบสรุปอ้อย
+  </button>
+</div>
+
+<!-- ================================================================ -->
+<!-- PAGE 1: SUGARCANE CUTTING CALCULATOR                              -->
+<!-- ================================================================ -->
+<div id="section-sc">
+
+<div class="page-header">
+  <div class="icon"></div>
+  <div>
+    <h1>เครื่องคำนวณราคาตัดอ้อยด้วยแรงงาน</h1>
+    <p>วิเคราะห์ต้นทุนต่อตัน · จุดคุ้มทุน · กำไร/ขาดทุนเทียบตลาด</p>
+  </div>
+</div>
+
+<div class="sec-title">โหมดการตัด</div>
+<div class="card" style="margin-bottom:.75rem">
+  <div class="g2">
+    <div class="fld">
+      <label>เลือกโหมด</label>
+      <select id="sc-mode" onchange="sc_modeSwitch()">
+        <option value="manual">&#9998; ตัดด้วยแรงงานคน (จ่ายเป็นกอง)</option>
+        <option value="machine">&#9881; ตัดด้วยเครื่อง (จ้างเหมาต่อตัน)</option>
+      </select>
+    </div>
+    <div class="fld">
+      <label>ราคาตลาดปัจจุบัน (บาท/ตัน)</label>
+      <input type="number" id="sc-marketRate" value="130" step="5" oninput="sc_calc()">
+      <span class="hint">อ้างอิงราคารับงานทั่วไป</span>
+    </div>
+  </div>
+</div>
+
+<!-- MODE A: Manual (bundle-based) -->
+<div id="sc-manual-section">
+  <div class="sec-title">ข้อมูลกองอ้อย (แรงงานคน)</div>
+  <div class="card">
+    <div class="g3" style="margin-bottom:14px">
+      <div class="fld">
+        <label>จำนวนลำต่อกอง</label>
+        <input type="number" id="bundleSize" value="60" min="1" step="1" oninput="sc_syncBundle()">
+        <span class="hint">เช่น 25, 30, 55, 60, 65 ลำ/กอง</span>
+      </div>
+      <div class="fld">
+        <label>ค่ากอง (บาท/กอง)</label>
+        <input type="number" id="pricePerBundle" value="10" min="1" step="0.5" oninput="sc_calc()">
+        <span class="hint">เช่น 5 หรือ 10 บาท</span>
+      </div>
+      <div class="fld">
+        <label>ราคารับจ้างจริง (บาท/ตัน)</label>
+        <input type="number" id="actualRate" value="140" step="5" oninput="sc_calc()">
+        <span class="hint">ราคาที่ตกลงกับลูกค้า</span>
+      </div>
+    </div>
+    <div class="slider-wrap" style="margin-bottom:10px">
+      <label>น้ำหนักเฉลี่ยต่อลำอ้อย (กก./ลำ) <span id="lbl-stalkWeight">1.20 กก.</span></label>
+      <input type="range" id="stalkWeight" min="0.3" max="3.5" step="0.05" value="1.2" oninput="sc_syncWeight(this)">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3)">
+        <span>0.3 กก.</span><span>1.5–2.0 กก. (ปกติ)</span><span>3.5 กก.</span>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="fld">
+        <label>อัตราตลาด ต่ำสุด (บาท/ตัน)</label>
+        <input type="number" id="mktLow" value="130" step="5" oninput="sc_calc()">
+      </div>
+      <div class="fld">
+        <label>อัตราตลาด สูงสุด (บาท/ตัน)</label>
+        <input type="number" id="mktHigh" value="150" step="5" oninput="sc_calc()">
+      </div>
+    </div>
+    <div id="bundle-quick" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px">
+      <span style="font-size:11px;color:var(--text3);align-self:center">ขนาดกองด่วน:</span>
+    </div>
+  </div>
+</div>
+
+<!-- MODE B: Machine -->
+<div id="sc-machine-section" style="display:none">
+  <div class="sec-title">ต้นทุนเครื่องตัดอ้อย (ต่อตัน)</div>
+  <div class="card">
+    <div class="g2" style="margin-bottom:12px">
+      <div class="fld">
+        <label>&#127981; ค่าจ้างคนขับเครื่อง (บาท/ตัน)</label>
+        <input type="number" id="mc-driver" value="30" step="5" oninput="sc_calc()">
+        <span class="hint">ตัวอย่าง 30 บาท/ตัน</span>
+      </div>
+      <div class="fld">
+        <label>&#9981; ค่าน้ำมัน (บาท/ตัน)</label>
+        <input type="number" id="mc-fuel" value="40" step="5" oninput="sc_calc()">
+        <span class="hint">เฉลี่ยต่อตัน (รวมรถไถ+เครื่องตัด)</span>
+      </div>
+    </div>
+    <div class="g2" style="margin-bottom:12px">
+      <div class="fld">
+        <label>&#128295; ค่าเสื่อม/ซ่อมเครื่องตัด (บาท/ตัน)</label>
+        <input type="number" id="mc-machine" value="20" step="5" oninput="sc_calc()">
+        <span class="hint">เครื่องตัด + รถไถ (ต้องใช้ร่วมกัน)</span>
+      </div>
+      <div class="fld">
+        <label>&#128101; ค่าแรงผู้ช่วย 2 คน/เครื่อง (บาท/ตัน)</label>
+        <input type="number" id="mc-crew" value="15" step="5" oninput="sc_calc()">
+        <span class="hint">1 เครื่อง ต้องมีผู้ช่วย 2 คน</span>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="fld">
+        <label>&#127861; ค่าน้ำดื่ม + อาหารคนงาน (บาท/ตัน)</label>
+        <input type="number" id="mc-food" value="8" step="1" oninput="sc_calc()">
+        <span class="hint">รวม 3 คน (คนขับ + ผู้ช่วย 2)</span>
+      </div>
+      <div class="fld">
+        <label>&#128200; ค่าใช้จ่ายอื่นๆ (บาท/ตัน)</label>
+        <input type="number" id="mc-other" value="5" step="1" oninput="sc_calc()">
+        <span class="hint">ค่าเดินทาง ค่าสึกหรออื่นๆ</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="sc-verdict-box"></div>
+<div class="g3" style="margin-bottom:1rem" id="sc-metrics-row"></div>
+
+<div class="card" id="sc-be-card" style="display:none">
+  <div class="sec-title">จุดคุ้มทุนและกำไร</div>
+  <div id="sc-be-bar-area"></div>
+</div>
+
+<div id="sc-manual-table-section">
+  <div class="sec-title" style="margin-top:.5rem">ตารางวิเคราะห์ตามน้ำหนักลำอ้อย</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="overflow-x:auto"><table>
+      <thead><tr>
+        <th>น้ำหนัก/ลำ (กก.)</th><th>ลำ/ตัน</th><th>กอง/ตัน</th>
+        <th>ต้นทุน/ตัน</th>
+        <th>รับ 130</th><th>รับ 140</th><th>รับ 150</th><th>ประเมิน</th>
+      </tr></thead>
+      <tbody id="sc-analysis-body"></tbody>
+    </table></div>
+    <div class="foot-note" style="padding:8px 12px">* สีเขียว = กำไร | สีเหลือง = เสมอทุน ±5% | สีแดง = ขาดทุน</div>
+  </div>
+</div>
+
+<div id="sc-machine-table-section" style="display:none">
+  <div class="sec-title" style="margin-top:.5rem">ตารางต้นทุนเครื่องตัด</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="overflow-x:auto"><table>
+      <thead><tr>
+        <th class="lft">รายการต้นทุน</th><th>บาท/ตัน</th><th>สัดส่วน</th>
+      </tr></thead>
+      <tbody id="sc-machine-body"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<div class="sec-title">สูตรคำนวณ</div>
+<div class="card"><div id="sc-formula-area"></div></div>
+<div class="sec-title">ข้อแนะนำ</div>
+<div class="card"><div id="sc-recommend-area"></div></div>
+
+</div><!-- end section-sc -->
+
+<!-- ================================================================ -->
+<!-- PAGE 2: LOAN CALCULATOR                                           -->
+<!-- ================================================================ -->
+<div id="section-loan" style="display:none">
+
+<div class="page-header">
+  <div class="icon"></div>
+  <div>
+    <h1>สัญญากู้ยืมเงิน</h1>
+    <p>Loan Amortization · สรุปยอดรับเงินต้นและดอกเบี้ย · ตรวจสอบอัตราดอก</p>
+  </div>
+</div>
+
+<!-- Loan sub-tabs -->
+<div class="loan-tabs">
+  <button class="loan-tab active" onclick="showLoanTab('lcalc')">คำนวณ</button>
+  <button class="loan-tab" onclick="showLoanTab('ltable')">ตารางผ่อน</button>
+  <button class="loan-tab" onclick="showLoanTab('laudit')">ตรวจดอก</button>
+  <button class="loan-tab" onclick="showLoanTab('loverdue')">ยอดค้าง</button>
+</div>
+
+<!-- sub-tab: CALC -->
+<div id="loan-lcalc">
+  <div class="sec-title">ข้อมูลสัญญา</div>
+  <div class="card">
+    <div class="g2" style="margin-bottom:12px">
+      <div class="fld"><label>วงเงินกู้ (บาท)</label>
+        <input type="number" id="l-principal" value="600000" step="1000"></div>
+      <div class="fld"><label>อัตราดอกเบี้ย (% ต่อปี)</label>
+        <input type="number" id="l-annualRate" value="20" step="0.1"></div>
+    </div>
+    <div class="g2" style="margin-bottom:12px">
+      <div class="fld"><label>ผ่อนงวดละ (บาท)</label>
+        <input type="number" id="l-payment" value="16000" step="500"></div>
+      <div class="fld"><label>วันชำระงวดแรก</label>
+        <input type="date" id="l-startDate" value="2023-09-10"></div>
+    </div>
+    <div class="g3" style="margin-bottom:12px">
+      <div class="fld"><label>จำนวนงวดทั้งหมด</label>
+        <input type="number" id="l-totalPeriods" value="60" min="1" max="360"></div>
+      <div class="fld"><label>ชำระล่าสุดถึงงวดที่</label>
+        <input type="number" id="l-lastPaid" value="18" min="0">
+        <span class="hint">0 = ยังไม่เคยชำระ</span></div>
+      <div class="fld"><label>วันที่คำนวณ</label>
+        <input type="date" id="l-calcDate" value="2026-03-16"></div>
+    </div>
+    <div class="g2">
+      <div class="fld"><label>วิธีคิดดอกเบี้ยค้าง</label>
+        <select id="l-intMethod">
+          <option value="compound">ทบต้นรายเดือน (Compound)</option>
+          <option value="simple">อย่างง่าย (Simple)</option>
+          <option value="actualdays">ตามวันจริง (Actual Days)</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <button class="btn btn-primary" onclick="loan_calculate()" style="flex:2">▶ คำนวณ</button>
+        <button class="btn btn-ghost" onclick="loan_reset()" style="flex:1">รีเซ็ต</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="l-result" style="display:none">
+    <div class="sec-title" style="margin-top:1rem">สรุปยอดรับเงินต้นและดอกเบี้ย</div>
+    <div class="g4" style="margin-bottom:10px">
+      <div class="mc"><div class="ml">วงเงินกู้</div><div class="mv mono" style="color:var(--blue)" id="lm-principal">—</div></div>
+      <div class="mc"><div class="ml">รวมจ่ายแล้ว</div><div class="mv mono" style="color:var(--green)" id="lm-paid">—</div><div class="ms" id="lm-paid-p">—</div></div>
+      <div class="mc"><div class="ml">เงินต้นคงค้าง</div><div class="mv mono" style="color:var(--red)" id="lm-remain">—</div></div>
+      <div class="mc"><div class="ml">ดอกเบี้ยค้าง</div><div class="mv mono" style="color:var(--amber)" id="lm-odint">—</div></div>
+    </div>
+    <div class="card">
+      <table>
+        <thead><tr><th class="lft" style="width:48%">รายการ</th><th>จำนวน (บาท)</th><th>สูตร</th></tr></thead>
+        <tbody id="l-summary-body"></tbody>
+      </table>
+      <div class="foot-note" id="l-summary-note"></div>
+    </div>
+  </div>
+</div>
+
+<!-- sub-tab: TABLE -->
+<div id="loan-ltable" style="display:none">
+  <div class="sec-title">ตารางผ่อนชำระรายงวด</div>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th>งวด</th><th>วันชำระ</th><th>งวดชำระ</th>
+        <th>ดอกเบี้ย</th><th>ชำระต้น</th><th>เงินต้นคงค้าง</th>
+        <th>%/ปี จริง</th><th>สถานะ</th></tr>
+      </thead>
+      <tbody id="l-amort-body"></tbody>
+    </table>
+  </div>
+  <div class="foot-note" id="l-amort-foot">กด "คำนวณ" ในแท็บแรกก่อน</div>
+</div>
+
+<!-- sub-tab: AUDIT -->
+<div id="loan-laudit" style="display:none">
+  <div class="sec-title">วิเคราะห์อัตราดอกเบี้ยจริงแต่ละงวด</div>
+  <div id="l-audit-alert" style="display:none" class="alert alert-amber"></div>
+  <div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius-sm)">
+    <table>
+      <thead>
+        <tr><th>งวด</th><th>วันชำระ</th><th>วันในรอบ</th>
+        <th>ดอกจ่ายจริง</th><th>ดอกมาตรฐาน</th>
+        <th>ผลต่าง</th><th>%/ปี จริง</th><th>วิเคราะห์</th></tr>
+      </thead>
+      <tbody id="l-audit-body"></tbody>
+    </table>
+  </div>
+  <div class="foot-note" id="l-audit-foot">กด "คำนวณ" ในแท็บแรกก่อน</div>
+</div>
+
+<!-- sub-tab: OVERDUE -->
+<div id="loan-loverdue" style="display:none">
+  <div class="sec-title">รายละเอียดยอดค้างชำระ</div>
+  <div id="l-overdue-content"><div style="color:var(--text2);font-size:13px">กด "คำนวณ" ในแท็บแรกก่อน</div></div>
+</div>
+
+</div><!-- end section-loan -->
+
+
+<!-- ================================================================ -->
+<!-- PAGE 3: 4-DEPARTMENT FULL OPERATIONS CALCULATOR                    -->
+<!-- ================================================================ -->
+<div id="section-ops" style="display:none">
+
+<div class="page-header">
+  <div class="icon"></div>
+  <div>
+    <h1>ต้นทุน 4 แผนก — รับเหมาครบวงจร</h1>
+    <p>สางใบ · ตัด · โหลด · ขนส่ง | อ้อยปีแรก 000 บ./ตัน | อ้อยตอ 000 บ./ตัน</p>
+  </div>
+</div>
+
+<!-- REVENUE SETTINGS -->
+<div class="sec-title">รายรับจากลูกค้า (ราคาอ้อยรวมทั้ง 4 แผนก)</div>
+<div class="card">
+  <div class="g2">
+    <div class="fld">
+      <label> ราคาอ้อยปีแรก (บาท/ตัน)</label>
+      <input type="number" id="ops-rev1" value="450" step="10" oninput="ops_calc()">
+      <span class="hint">อ้อยปลูกใหม่ ปีที่ 1</span>
+    </div>
+    <div class="fld">
+      <label> ราคาอ้อยตอ ปี 2 ขึ้นไป (บาท/ตัน)</label>
+      <input type="number" id="ops-rev2" value="500" step="10" oninput="ops_calc()">
+      <span class="hint">อ้อยตอ ปีที่ 2, 3, 4 ...</span>
+    </div>
+  </div>
+</div>
+
+<!-- 4 DEPARTMENT INPUTS -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem">
+
+<!-- DEPT 1: สางใบ -->
+<div class="card" style="border-left:3px solid var(--green);margin-bottom:0">
+  <div class="sec-title" style="margin-bottom:.6rem"> แผนก 1 — สางใบอ้อย</div>
+  <div class="fld" style="margin-bottom:8px">
+    <label>ค่าแรงสางใบ (บาท/ตัน)</label>
+    <input type="number" id="d1-labor" value="30" step="5" oninput="ops_calc()">
+  </div>
+  <div class="fld" style="margin-bottom:8px">
+    <label>อุปกรณ์ / สึกหรอ (บาท/ตัน)</label>
+    <input type="number" id="d1-equip" value="5" step="1" oninput="ops_calc()">
+  </div>
+  <div class="fld">
+    <label>อาหาร + น้ำดื่มคนงาน (บาท/ตัน)</label>
+    <input type="number" id="d1-food" value="5" step="1" oninput="ops_calc()">
+  </div>
+  <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+    <span style="font-size:12px;color:var(--text2)">รวมแผนก 1</span>
+    <span class="mono" style="color:var(--green);font-weight:600;font-size:14px" id="d1-total">—</span>
+  </div>
+</div>
+
+<!-- DEPT 2: ตัด -->
+<div class="card" style="border-left:3px solid var(--blue);margin-bottom:0">
+  <div class="sec-title" style="margin-bottom:.6rem"> แผนก 2 — ตัดอ้อย</div>
+  <div class="fld" style="margin-bottom:8px">
+    <label>ค่าจ้างคนขับเครื่องตัด (บาท/ตัน)</label>
+    <input type="number" id="d2-driver" value="30" step="5" oninput="ops_calc()">
+  </div>
+  <div class="fld" style="margin-bottom:8px">
+    <label>ค่าน้ำมัน เครื่องตัด + รถไถ (บาท/ตัน)</label>
+    <input type="number" id="d2-fuel" value="40" step="5" oninput="ops_calc()">
+  </div>
+  <div class="fld" style="margin-bottom:8px">
+    <label>ค่าเสื่อม/ซ่อม เครื่อง+รถ (บาท/ตัน)</label>
+    <input type="number" id="d2-machine" value="20" step="5" oninput="ops_calc()">
+  </div>
+  <div class="fld" style="margin-bottom:8px">
+    <label>ค่าแรงผู้ช่วย 2 คน (บาท/ตัน)</label>
+    <input type="number" id="d2-crew" value="15" step="5" oninput="ops_calc()">
+  </div>
+  <div class="fld">
+    <label>อาหาร + น้ำดื่มคนงาน (บาท/ตัน)</label>
+    <input type="number" id="d2-food" value="8" step="1" oninput="ops_calc()">
+  </div>
+  <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+    <span style="font-size:12px;color:var(--text2)">รวมแผนก 2</span>
+    <span class="mono" style="color:var(--blue);font-weight:600;font-size:14px" id="d2-total">—</span>
+  </div>
+</div>
+
+<!-- DEPT 3: โหลด -->
+<div class="card" style="border-left:3px solid var(--amber);margin-bottom:0">
+  <div class="sec-title" style="margin-bottom:.6rem"> แผนก 3 — โหลดอ้อย</div>
+  <div class="fld" style="margin-bottom:8px">
+    <label>ค่าจ้างคนขับรถโหลด (บาท/ตัน)</label>
+    <input type="number" id="d3-driver" value="20" step="5" oninput="ops_calc()">
+  </div>
+  <div class="fld" style="margin-bottom:8px">
+    <label>ค่าน้ำมันรถโหลด (บาท/ตัน)</label>
+    <input type="number" id="d3-fuel" value="15" step="5" oninput="ops_calc()">
+  </div>
+  <div class="fld" style="margin-bottom:8px">
+    <label>ค่าเสื่อม/ซ่อมรถโหลด (บาท/ตัน)</label>
+    <input type="number" id="d3-machine" value="10" step="5" oninput="ops_calc()">
+  </div>
+  <div class="fld">
+    <label>อาหาร + น้ำดื่มคนงาน (บาท/ตัน)</label>
+    <input type="number" id="d3-food" value="5" step="1" oninput="ops_calc()">
+  </div>
+  <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+    <span style="font-size:12px;color:var(--text2)">รวมแผนก 3</span>
+    <span class="mono" style="color:var(--amber);font-weight:600;font-size:14px" id="d3-total">—</span>
+  </div>
+</div>
+
+<!-- DEPT 4: ขนส่ง -->
+<div class="card" style="border-left:3px solid var(--red);margin-bottom:0">
+  <div class="sec-title" style="margin-bottom:.6rem"> แผนก 4 — ขนส่ง</div>
+  <div class="fld" style="margin-bottom:8px">
+    <label>ค่าจ้างคนขับรถบรรทุก (บาท/ตัน)</label>
+    <input type="number" id="d4-driver" value="40" step="5" oninput="ops_calc()">
+  </div>
+  <div class="fld" style="margin-bottom:8px">
+    <label>ค่าน้ำมันรถบรรทุก (บาท/ตัน)</label>
+    <input type="number" id="d4-fuel" value="60" step="5" oninput="ops_calc()">
+  </div>
+  <div class="fld" style="margin-bottom:8px">
+    <label>ค่าเสื่อม/ซ่อมรถ (บาท/ตัน)</label>
+    <input type="number" id="d4-machine" value="30" step="5" oninput="ops_calc()">
+  </div>
+  <div class="fld" style="margin-bottom:8px">
+    <label>ค่าผ่านทาง / อื่นๆ (บาท/ตัน)</label>
+    <input type="number" id="d4-toll" value="10" step="5" oninput="ops_calc()">
+  </div>
+  <div class="fld">
+    <label>อาหาร + น้ำดื่มคนงาน (บาท/ตัน)</label>
+    <input type="number" id="d4-food" value="8" step="1" oninput="ops_calc()">
+  </div>
+  <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+    <span style="font-size:12px;color:var(--text2)">รวมแผนก 4</span>
+    <span class="mono" style="color:var(--red);font-weight:600;font-size:14px" id="d4-total">—</span>
+  </div>
+</div>
+
+</div><!-- end 4-dept grid -->
+
+<!-- OVERHEAD -->
+<div class="sec-title">ต้นทุนส่วนกลาง / ค่าบริหาร</div>
+<div class="card">
+  <div class="g3">
+    <div class="fld">
+      <label>ค่าบริหาร / หัวหน้างาน (บาท/ตัน)</label>
+      <input type="number" id="ops-mgmt" value="10" step="5" oninput="ops_calc()">
+    </div>
+    <div class="fld">
+      <label>ค่าประกัน / ความเสี่ยง (บาท/ตัน)</label>
+      <input type="number" id="ops-insurance" value="5" step="1" oninput="ops_calc()">
+    </div>
+    <div class="fld">
+      <label>กำไรขั้นต่ำที่ต้องการ (บาท/ตัน)</label>
+      <input type="number" id="ops-target" value="30" step="5" oninput="ops_calc()">
+      <span class="hint">กำไรเป้าหมายต่อตัน</span>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="ops-results"></div>
+
+</div><!-- end section-ops -->
+
+
+<!-- ================================================================ -->
+<!-- PAGE 4: CUSTOMER RECEIPT                                           -->
+<!-- ================================================================ -->
+<div id="section-cust" style="display:none">
+
+<div class="page-header">
+  <div class="icon">&#128210;</div>
+  <div>
+    <h1>ใบสรุปรายรับอ้อย</h1>
+    <p>สรุปยอดหลังหักค่าเก็บเกี่ยว — ลูกค้านั่งรอรับเงินอย่างเดียว</p>
+  </div>
+</div>
+
+<!-- INPUTS -->
+<div class="cust-inputs">
+  <div class="sec-title">ข้อมูลลูกค้าและแปลงอ้อย</div>
+  <div class="card">
+    <div class="g2" style="margin-bottom:12px">
+      <div class="fld">
+        <label>&#128100; ชื่อลูกค้า</label>
+        <input type="text" id="cust-name" placeholder="เช่น นายสมชาย ใจดี" oninput="cust_calc()">
+      </div>
+      <div class="fld">
+        <label>&#127807; แปลงอ้อย / ที่ตั้ง</label>
+        <input type="text" id="cust-field" placeholder="เช่น แปลง A บ้านโนนสูง" oninput="cust_calc()">
+      </div>
+    </div>
+    <div class="g3" style="margin-bottom:12px">
+      <div class="fld">
+        <label>&#9881; ประเภทอ้อย</label>
+        <select id="cust-type" onchange="cust_calc()">
+          <option value="1">อ้อยปีแรก (ปลูกใหม่)</option>
+          <option value="2">อ้อยตอ (ปี 2 ขึ้นไป)</option>
+        </select>
+      </div>
+      <div class="fld">
+        <label>&#9878; น้ำหนักอ้อย (ตัน)</label>
+        <input type="number" id="cust-tons" value="100" min="0.1" step="0.1" oninput="cust_calc()">
+        <span class="hint">น้ำหนักหลังชั่ง ณ โรงงาน</span>
+      </div>
+      <div class="fld">
+        <label>&#128197; วันที่ตัด</label>
+        <input type="date" id="cust-date" oninput="cust_calc()">
+      </div>
+    </div>
+    <div class="g2">
+      <div class="fld">
+        <label>&#128176; ราคาอ้อยปีแรก (บาท/ตัน)</label>
+        <input type="number" id="cust-price1" value="450" step="10" oninput="cust_calc()">
+      </div>
+      <div class="fld">
+        <label>&#128176; ราคาอ้อยตอ (บาท/ตัน)</label>
+        <input type="number" id="cust-price2" value="500" step="10" oninput="cust_calc()">
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-title">ค่าเก็บเกี่ยว 4 แผนก (บาท/ตัน)</div>
+  <div class="card">
+    <div class="g4" style="margin-bottom:10px">
+      <div class="fld">
+        <label>&#127807; สางใบ</label>
+        <input type="number" id="cust-d1" value="40" step="5" oninput="cust_calc()">
+      </div>
+      <div class="fld">
+        <label>&#9881; ตัดอ้อย</label>
+        <input type="number" id="cust-d2" value="113" step="5" oninput="cust_calc()">
+      </div>
+      <div class="fld">
+        <label>&#128663; โหลดอ้อย</label>
+        <input type="number" id="cust-d3" value="50" step="5" oninput="cust_calc()">
+      </div>
+      <div class="fld">
+        <label>&#128666; ขนส่ง</label>
+        <input type="number" id="cust-d4" value="148" step="5" oninput="cust_calc()">
+      </div>
+    </div>
+    <div class="fld">
+      <label>&#128203; ค่าใช้จ่ายอื่นๆ (บาท/ตัน) เช่น ค่าบริหาร ประกัน</label>
+      <input type="number" id="cust-dother" value="15" step="5" oninput="cust_calc()">
+    </div>
+  </div>
+</div>
+
+<!-- RECEIPT OUTPUT -->
+<div id="cust-receipt-wrap"></div>
+
+</div><!-- end section-cust -->
+
+<!-- COPYRIGHT FOOTER -->
+<div style="margin-top:2.5rem;padding:1.5rem 1rem;border-top:1px solid var(--border);text-align:center">
+  <div style="font-size:15px;font-weight:700;color:var(--text2);letter-spacing:.15em;font-family:'IBM Plex Mono',monospace">S.W.BERNHARDT</div>
+  <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:2">
+    &copy; <span id="copy-year"></span> S.W.Bernhardt. All rights reserved.<br>
+    Sugarcane Cutting Calculator &amp; Loan Amortization System<br>
+    Unauthorized reproduction or distribution is prohibited.
+  </div>
+</div>
+
+</div><!-- end .app -->
+
+<script>
+/* ===== PAGE SWITCHER ===== */
+function switchPage(page){
+  ['sc','loan','ops','cust'].forEach(p=>{
+    document.getElementById('section-'+p).style.display = p===page ? 'block' : 'none';
+    document.getElementById('page-'+p).classList.toggle('active', p===page);
+  });
+}
+function showLoanTab(t){
+  ['lcalc','ltable','laudit','loverdue'].forEach(n=>{
+    document.getElementById('loan-'+n).style.display = n===t ? 'block' : 'none';
+  });
+  document.querySelectorAll('.loan-tab').forEach((btn,i)=>{
+    btn.classList.toggle('active',['lcalc','ltable','laudit','loverdue'][i]===t);
+  });
+}
+
+/* ===== UTILS ===== */
+const $=id=>document.getElementById(id);
+function fmtTH(n,d=2){return parseFloat(n).toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d})}
+function fmtDate(d){
+  return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+(d.getFullYear()+543);
+}
+function addMonths(dt,m){const d=new Date(dt);d.setMonth(d.getMonth()+m);return d}
+function daysBetween(a,b){return Math.round((b-a)/(1000*60*60*24))}
+
+/* ===== PAGE 1: SUGARCANE ===== */
+const SC_PRESETS=[
+  {size:25,price:5,label:'25 ลำ / 5 บ.'},
+  {size:30,price:5,label:'30 ลำ / 5 บ.'},
+  {size:55,price:10,label:'55 ลำ / 10 บ.'},
+  {size:60,price:10,label:'60 ลำ / 10 บ.'},
+  {size:65,price:10,label:'65 ลำ / 10 บ.'},
+];
+function sc_buildPresets(){
+  const wrap=$('bundle-quick');
+  if(!wrap)return;
+  const existing=wrap.querySelectorAll('button');
+  existing.forEach(b=>b.remove());
+  SC_PRESETS.forEach(p=>{
+    const b=document.createElement('button');
+    b.textContent=p.label;
+    b.style.cssText='font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-family:"Sarabun",sans-serif;transition:all .15s';
+    b.onmouseover=()=>{b.style.background='var(--bg4)';b.style.color='var(--text)'};
+    b.onmouseout=()=>{b.style.background='var(--bg3)';b.style.color='var(--text2)'};
+    b.onclick=()=>{$('bundleSize').value=p.size;$('pricePerBundle').value=p.price;sc_calc();};
+    wrap.appendChild(b);
+  });
+}
+function sc_modeSwitch(){
+  const mode=$('sc-mode').value;
+  $('sc-manual-section').style.display=mode==='manual'?'block':'none';
+  $('sc-machine-section').style.display=mode==='machine'?'block':'none';
+  $('sc-manual-table-section').style.display=mode==='manual'?'block':'none';
+  $('sc-machine-table-section').style.display=mode==='machine'?'block':'none';
+  sc_calc();
+}
+function sc_syncBundle(){sc_calc();}
+function sc_syncWeight(el){
+  $('lbl-stalkWeight').textContent=parseFloat(el.value).toFixed(2)+' กก.';
+  sc_calc();
+}
+function sc_calc(){
+  const mode=$('sc-mode')?$('sc-mode').value:'manual';
+  const mktRate=parseFloat($('sc-marketRate')?$('sc-marketRate').value:130)||130;
+
+  if(mode==='machine'){
+    sc_calcMachine(mktRate);
+  } else {
+    sc_calcManual(mktRate);
+  }
+}
+function sc_calcManual(mktRate){
+  const bs=parseInt($('bundleSize').value)||60;
+  const bp=parseFloat($('pricePerBundle').value)||10;
+  const sw=parseFloat($('stalkWeight').value)||1.2;
+  const ml=parseFloat($('mktLow').value)||130;
+  const mh=parseFloat($('mktHigh').value)||150;
+  const ar=parseFloat($('actualRate').value)||140;
+  const spt=1000/sw,bpt=spt/bs,cpt=bpt*bp,rps=bp/bs;
+  const profit=ar-cpt,pp=(profit/cpt)*100;
+  const bw=(1000*bp)/(bs*ar),bl=(1000*bp)/(bs*ml),bh=(1000*bp)/(bs*mh);
+  const ip=profit>0,ie=Math.abs(profit)<=cpt*0.05;
+  const vc=ip?'profit':ie?'warn':'loss';
+  const vt=ip?'<b>กำไร '+fmtTH(profit)+' บาท/ตัน</b>':ie?'<b>เกือบทุน ±'+fmtTH(Math.abs(pp),1)+'%</b>':'<b>ขาดทุน '+fmtTH(Math.abs(profit))+' บาท/ตัน</b>';
+  $('sc-verdict-box').innerHTML='<div class="verdict '+vc+'"><div class="verdict-icon">'+(ip?'':ie?'':'')+'</div><div><div style="font-size:14px;font-weight:600">'+vt+'</div><div style="font-size:12px;opacity:.85">ต้นทุน '+fmtTH(cpt)+' | รับ '+fmtTH(ar)+' | น้ำหนัก '+fmtTH(sw,2)+' กก. | '+bs+' ลำ/กอง '+bp+' บ.</div></div></div>';
+  $('sc-metrics-row').innerHTML='<div class="mc '+(ip?'profit':ie?'warn':'loss')+'"><div class="ml">ต้นทุน/ตัน</div><div class="mv">'+fmtTH(cpt)+'</div><div class="ms">บาท/ตัน</div></div><div class="mc '+(ip?'profit':ie?'warn':'loss')+'"><div class="ml">กำไร/ขาดทุน</div><div class="mv">'+(profit>=0?'+':'')+fmtTH(profit)+'</div><div class="ms">บาท/ตัน</div></div><div class="mc"><div class="ml">จุดคุ้มทุน</div><div class="mv" style="color:var(--amber)">'+fmtTH(bw,2)+'</div><div class="ms">กก./ลำขึ้นไป</div></div>';
+  const max=3.5,min=0.3,np=Math.min(100,Math.max(0,((sw-min)/(max-min))*100)),bp2=Math.min(100,Math.max(0,((bw-min)/(max-min))*100)),fc=sw>=bw?'#3dd68c':'#ff5f5f';
+  $('sc-be-card').style.display='block';
+  $('sc-be-bar-area').innerHTML='<div style="font-size:12px;color:var(--text2);margin-bottom:6px">ปัจจุบัน <span style="color:'+fc+';font-weight:600">'+fmtTH(sw,2)+' กก.</span> | จุดคุ้มทุน <span style="color:var(--amber);font-weight:600">'+fmtTH(bw,2)+' กก.</span> | '+(sw>=bw?'<span style="color:#3dd68c">✔ กำไร</span>':'<span style="color:#ff5f5f">✖ ขาดทุน</span>')+'</div><div class="breakeven-bar"><div class="be-fill" style="width:'+np+'%;background:'+fc+'20;border-right:3px solid '+fc+'"></div><div class="be-marker" style="left:'+bp2+'%"></div><div class="be-marker-label" style="left:'+Math.min(bp2+1,60)+'%">'+fmtTH(bw,2)+' กก.</div></div>';
+  const ws=[0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.8,2.0,2.2,2.5,3.0,3.5];
+  let tb='';
+  ws.forEach(w=>{const s=1000/w,b=s/bs,c=b*bp,p130=mktRate-c,p140=140-c,p150=150-c,ic=Math.abs(w-sw)<0.06;
+    const pF=p=>'<td class="mono" style="color:'+(p>5?'#3dd68c':p>=-5?'#f5c842':'#ff5f5f')+'">'+(p>=0?'+':'')+fmtTH(p)+'</td>';
+    const bdg=c<=mktRate?'<span class="badge b-green">กำไร</span>':c<=mktRate*1.05?'<span class="badge b-amber">พอทุน</span>':c<=150?'<span class="badge b-amber">เสี่ยง</span>':'<span class="badge b-red">ขาดทุน</span>';
+    tb+='<tr class="'+(ic?'hl':'')+'"><td class="ctr mono" style="'+(ic?'color:var(--green);font-weight:600':'')+'">'+fmtTH(w,2)+(ic?' ◄':'')+'</td><td class="mono">'+fmtTH(s,0)+'</td><td class="mono">'+fmtTH(b,1)+'</td><td class="mono" style="color:'+(c>ar?'var(--red)':'var(--amber)')+'">'+fmtTH(c)+'</td>'+pF(p130)+pF(p140)+pF(p150)+'<td class="ctr">'+bdg+'</td></tr>';
+  });
+  $('sc-analysis-body').innerHTML=tb;
+  $('sc-formula-area').innerHTML='<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:monospace;font-size:12px;color:var(--green);line-height:2">ลำ/ตัน = 1,000 ÷ น้ำหนัก/ลำ<br>กอง/ตัน = ลำ/ตัน ÷ '+bs+'<br>ต้นทุน/ตัน = กอง/ตัน × '+bp+' บาท<br>จุดคุ้มทุน = 1,000×'+bp+' ÷ ('+bs+'×ราคา/ตัน)</div>';
+  const recItems=[];
+  if(sw<bw){recItems.push(' <b>ขาดทุน '+fmtTH(cpt-ar)+' บาท/ตัน</b> — ควรขอราคา &gt; '+fmtTH(cpt)+' บาท/ตัน');recItems.push(' ต้องการอ้อย &gt; <b>'+fmtTH(bw,2)+' กก./ลำ</b> ถึงจะคุ้มทุน');}else{recItems.push('✅ <b>กำไร '+fmtTH(profit)+' บาท/ตัน</b>');}
+  recItems.push(' ชั่งกองตัวอย่าง 5–10 กอง คำนวณน้ำหนักเฉลี่ยก่อนตกลงราคา');
+  recItems.push('อ้อยเล็ก &lt;1 กก./ลำ ควรขอ &gt;160 บ./ตัน | อ้อยกลาง 1.2–1.8 กก. อยู่ได้ที่ 130–140 บ./ตัน');
+  recItems.push(' <b>กอง '+bs+' ลำ = '+bp+' บาท</b> — คุ้มทุนเมื่ออ้อยหนักกว่า '+fmtTH(bw*bs,1)+' กก./กอง ('+fmtTH(bw,2)+' กก./ลำ)');
+  $('sc-recommend-area').innerHTML=recItems.map(r=>'<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;line-height:1.6">'+r+'</div>').join('');
+}
+function sc_calcMachine(mktRate){
+  const driver=parseFloat($('mc-driver').value)||30;
+  const fuel=parseFloat($('mc-fuel').value)||40;
+  const machine=parseFloat($('mc-machine').value)||20;
+  const crew=parseFloat($('mc-crew').value)||15;
+  const food=parseFloat($('mc-food').value)||8;
+  const other=parseFloat($('mc-other').value)||5;
+  const totalCost=driver+fuel+machine+crew+food+other;
+  const profit=mktRate-totalCost;
+  const profitPct=(profit/totalCost)*100;
+  const minRate=Math.ceil(totalCost/5)*5;
+  const ip=profit>0,ie=Math.abs(profit)<=totalCost*0.05;
+  const vc=ip?'profit':ie?'warn':'loss';
+  const vt=ip?'<b>กำไร '+fmtTH(profit)+' บาท/ตัน</b> ที่ราคา '+mktRate+' บาท/ตัน':'<b>ขาดทุน '+fmtTH(Math.abs(profit))+' บาท/ตัน</b> — ต้องขอราคา &ge; '+minRate+' บาท/ตัน';
+  $('sc-verdict-box').innerHTML='<div class="verdict '+vc+'"><div class="verdict-icon">'+(ip?'':ie?'':'')+'</div><div><div style="font-size:14px;font-weight:600">'+vt+'</div><div style="font-size:12px;opacity:.85">ต้นทุนรวม '+fmtTH(totalCost)+' บ./ตัน | ราคาตลาด '+mktRate+' บ./ตัน | ต้องการราคาขั้นต่ำ '+minRate+' บ./ตัน</div></div></div>';
+  $('sc-metrics-row').innerHTML='<div class="mc '+(ip?'profit':'loss')+'"><div class="ml">ต้นทุนรวม/ตัน</div><div class="mv">'+fmtTH(totalCost)+'</div><div class="ms">บาท/ตัน</div></div><div class="mc '+(ip?'profit':ie?'warn':'loss')+'"><div class="ml">กำไร/ขาดทุน</div><div class="mv">'+(profit>=0?'+':'')+fmtTH(profit)+'</div><div class="ms">บาท/ตัน</div></div><div class="mc warn"><div class="ml">ราคาขั้นต่ำที่ต้องขอ</div><div class="mv" style="color:var(--amber)">'+minRate+'</div><div class="ms">บาท/ตัน</div></div>';
+  // breakeven bar vs market
+  const maxR=200,minR=80;
+  const mktPct=Math.min(100,Math.max(0,((mktRate-minR)/(maxR-minR))*100));
+  const bePct=Math.min(100,Math.max(0,((totalCost-minR)/(maxR-minR))*100));
+  const fc=ip?'#3dd68c':'#ff5f5f';
+  $('sc-be-card').style.display='block';
+  $('sc-be-bar-area').innerHTML='<div style="font-size:12px;color:var(--text2);margin-bottom:6px">ราคาตลาด <span style="color:'+fc+';font-weight:600">'+mktRate+' บาท/ตัน</span> | ต้นทุนรวม <span style="color:var(--amber);font-weight:600">'+fmtTH(totalCost)+' บาท/ตัน</span></div><div class="breakeven-bar"><div class="be-fill" style="width:'+mktPct+'%;background:'+fc+'20;border-right:3px solid '+fc+'"></div><div class="be-marker" style="left:'+bePct+'%"></div><div class="be-marker-label" style="left:'+Math.min(bePct+1,60)+'%">ต้นทุน '+fmtTH(totalCost)+' บ.</div></div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px"><span>'+minR+' บ./ตัน</span><span>'+maxR+' บ./ตัน</span></div>';
+  // cost breakdown table
+  const items=[
+    ['&#127981; ค่าจ้างคนขับ',driver,'คนขับเครื่องตัด'],
+    ['&#9981; ค่าน้ำมัน',fuel,'เครื่องตัด + รถไถ'],
+    ['&#128295; ค่าเสื่อม/ซ่อม',machine,'เครื่องตัด + รถไถ'],
+    ['&#128101; ค่าแรงผู้ช่วย 2 คน',crew,'1 เครื่อง ต้องมี 2 คน'],
+    ['&#127861; น้ำดื่ม + อาหาร',food,'รวม 3 คน (คนขับ+ผู้ช่วย)'],
+    ['&#128200; ค่าใช้จ่ายอื่นๆ',other,'ค่าเดินทาง ฯลฯ'],
+    ['<b>รวมต้นทุนทั้งสิ้น</b>',totalCost,''],
+  ];
+  let tb='';
+  items.forEach(([name,val,note],i)=>{
+    const pct=i<items.length-1?fmtTH(val/totalCost*100,1)+'%':'100%';
+    const isTotal=i===items.length-1;
+    tb+='<tr class="'+(isTotal?'tr-total':'')+'"><td class="lft" style="font-size:12px">'+name+'<br><span style="font-size:10px;color:var(--text3)">'+note+'</span></td><td class="mono" style="color:'+(isTotal?'var(--red)':'var(--text)')+'">'+fmtTH(val)+'</td><td class="ctr"><div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden"><div style="width:'+fmtTH(val/totalCost*100,1)+'%;height:100%;background:var(--blue);border-radius:3px"></div></div><span style="font-size:10px;min-width:32px">'+pct+'</span></div></td></tr>';
+  });
+  $('sc-machine-body').innerHTML=tb;
+  $('sc-formula-area').innerHTML='<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:monospace;font-size:12px;color:var(--green);line-height:2">ต้นทุน/ตัน = คนขับ + น้ำมัน + เสื่อม/ซ่อม + แรงผู้ช่วย + อาหาร + อื่นๆ<br>= '+driver+' + '+fuel+' + '+machine+' + '+crew+' + '+food+' + '+other+' = <span style="color:var(--amber)">'+fmtTH(totalCost)+' บาท/ตัน</span><br>กำไร = ราคารับ − ต้นทุนรวม = '+mktRate+' − '+fmtTH(totalCost)+' = <span style="color:'+(ip?'var(--green)':'var(--red)')+'"> '+(profit>=0?'+':'')+fmtTH(profit)+' บาท/ตัน</span><br>ราคาขั้นต่ำที่ต้องได้ = ต้นทุนรวม ≈ <span style="color:var(--amber)">'+minRate+' บาท/ตัน</span></div>';
+  const rec=[];
+  if(!ip){rec.push(' <b>ขาดทุน '+fmtTH(Math.abs(profit))+' บาท/ตัน</b> — ควรเจรจาขอราคาขั้นต่ำ <b>'+minRate+' บาท/ตัน</b>');rec.push(' หากประหยัดน้ำมันได้ '+fmtTH(profit<0?Math.abs(profit):0)+' บ./ตัน จะถึงจุดคุ้มทุนพอดี');}else{rec.push('✅ <b>กำไร '+fmtTH(profit)+' บาท/ตัน</b> ที่ราคาตลาด '+mktRate+' บาท/ตัน');}
+  rec.push('<b>ประสิทธิภาพ:</b> ยิ่งตัดได้ตันต่อวันมาก → ค่าเสื่อม/ซ่อมต่อตันยิ่งลดลง');
+  rec.push(' <b>ต้นทุนหลักที่ควบคุมได้:</b> ค่าน้ำมัน ('+fmtTH(fuel/totalCost*100,1)+'%) — ดูแลเครื่องให้สมบูรณ์ก่อนฤดูกาล');
+  rec.push('<b>ราคาขั้นต่ำ '+minRate+' บาท/ตัน</b> — ต่ำกว่านี้ไม่ควรรับงาน');
+  $('sc-recommend-area').innerHTML=rec.map(r=>'<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;line-height:1.6">'+r+'</div>').join('');
+}
+/* ===== PAGE 2: LOAN ===== */
+let loanData=null;
+function loan_calculate(){
+  const P=parseFloat($('l-principal').value)||0;
+  const r=(parseFloat($('l-annualRate').value)||0)/100;
+  const pmt=parseFloat($('l-payment').value)||0;
+  const start=new Date($('l-startDate').value);
+  const lp=parseInt($('l-lastPaid').value)||0;
+  const tp=parseInt($('l-totalPeriods').value)||60;
+  const today=new Date($('l-calcDate').value);
+  const method=$('l-intMethod').value;
+  if(!P||!r||!pmt||isNaN(start.getTime()))return;
+  const mRate=r/12;
+  let bal=P,sumPrin=0,sumInt=0;
+  const sched=[];
+  for(let i=0;i<tp;i++){
+    const payDate=addMonths(start,i);
+    const prevBal=bal;
+    const intAmt=bal*mRate;
+    const prinAmt=Math.min(pmt-intAmt,bal);
+    bal=Math.max(0,bal-prinAmt);
+    const paid=(i+1)<=lp;
+    if(paid){sumPrin+=prinAmt;sumInt+=intAmt;}
+    const actualDays=daysBetween(payDate,addMonths(start,i+1));
+    const effRate=(intAmt/prevBal)*365/actualDays*100;
+    sched.push({period:i+1,date:payDate,pmt,intAmt,prinAmt,balAfter:bal,prevBal,paid,actualDays,effRate,closed:bal<=0.01});
+    if(bal<=0.01)break;
+  }
+  const lastPaidRow=lp>0?sched[lp-1]:null;
+  const remBal=lastPaidRow?lastPaidRow.balAfter:P;
+  const lastPayDate=lastPaidRow?lastPaidRow.date:new Date(start.getTime()-30*24*60*60*1000);
+  const odDays=Math.max(0,daysBetween(lastPayDate,today));
+  const odMonths=odDays/30.44;
+  let odInt=0;
+  if(method==='compound') odInt=remBal*(Math.pow(1+mRate,odMonths)-1);
+  else odInt=remBal*r*(odDays/365);
+  const totalOwed=remBal+odInt;
+  const dailyInt=remBal*r/365;
+  loanData={P,r,pmt,start,lp,tp,today,method,mRate,sched,sumPrin,sumInt,remBal,lastPayDate,odDays,odMonths,odInt,totalOwed,dailyInt};
+  loan_renderSummary();loan_renderAmort();loan_renderAudit();loan_renderOverdue();
+  $('l-result').style.display='block';
+}
+function loan_renderSummary(){
+  const{P,r,mRate,lp,sumPrin,sumInt,remBal,lastPayDate,odDays,odMonths,odInt,totalOwed,dailyInt,method,today}=loanData;
+  $('lm-principal').textContent=fmtTH(P);$('lm-paid').textContent=fmtTH(sumPrin+sumInt);
+  $('lm-paid-p').textContent=lp+' งวด';$('lm-remain').textContent=fmtTH(remBal);$('lm-odint').textContent=fmtTH(odInt);
+  const mL=method==='compound'?'ทบต้นรายเดือน':method==='simple'?'อย่างง่าย':'ตามวันจริง';
+  const odF=method==='compound'
+    ?`เงินต้น×[(1+${fmtTH(r/12*100,4)}%)^${fmtTH(odMonths,2)}−1]`
+    :`เงินต้น×${fmtTH(r*100,0)}%×${odDays}÷365`;
+  const rows=[
+    ['วงเงินกู้เริ่มต้น',fmtTH(P),'ตามสัญญา','blue'],
+    ['รวมจ่ายดอกเบี้ยสะสม ('+lp+' งวด)',fmtTH(sumInt),'Σ ดอกเบี้ยงวด 1–'+lp,'green'],
+    ['รวมชำระต้นสะสม ('+lp+' งวด)',fmtTH(sumPrin),'Σ เงินต้นงวด 1–'+lp,'green'],
+    ['รวมชำระทั้งสิ้น',fmtTH(sumPrin+sumInt),'ดอก + ต้น','green',true],
+    ['เงินต้นคงค้าง ณ งวด '+lp,fmtTH(remBal),'วงเงิน − Σต้น','red'],
+    ['วันชำระล่าสุด',fmtDate(lastPayDate),'—',''],
+    ['วันค้างชำระ',fmtTH(odDays,0)+' วัน','วันนี้ − ชำระล่าสุด','amber'],
+    ['ดอกค้าง ('+mL+')',fmtTH(odInt),odF,'red'],
+    ['ดอกเบี้ยรายวัน',fmtTH(dailyInt)+' / วัน','เงินต้น × อัตรา ÷ 365','amber'],
+    ['ยอดหนี้รวม ณ '+fmtDate(today),fmtTH(totalOwed),'เงินต้น + ดอกค้าง','red',true,true],
+  ];
+  let html='';
+  rows.forEach(([lbl,val,formula,cls,bold,big])=>{
+    const trCls=big?'tr-total big':bold?'tr-total':'';
+    const vc=cls?`style="color:var(--${cls==='blue'?'blue':cls==='green'?'green':cls==='red'?'red':'amber'})"`:'';
+    html+=`<tr class="${trCls}"><td class="lft">${lbl}</td><td class="mono" ${vc}>${val}</td>
+      <td style="font-size:11px;color:var(--text3)">${formula}</td></tr>`;
+  });
+  $('l-summary-body').innerHTML=html;
+  $('l-summary-note').textContent='วันที่คำนวณ: '+fmtDate(loanData.today)+' | วิธีดอกค้าง: '+mL;
+}
+function loan_renderAmort(){
+  const{sched,lp}=loanData;
+  let html='';
+  sched.forEach(row=>{
+    const{period,date,pmt,intAmt,prinAmt,balAfter,paid,effRate,closed,actualDays}=row;
+    const cls=closed&&period<=lp?'':'paid'==='' ? '' : paid?'paid':'overdue';
+    const trCls=paid?'paid':period>lp?'overdue':'';
+    const badge=closed?'<span class="badge b-gray">ปิดหนี้</span>':paid?'<span class="badge b-green">จ่ายแล้ว</span>':'<span class="badge b-red">ค้าง</span>';
+    const rCls=effRate>22?'rate-anom':effRate>20.5?'rate-warn':'rate-ok';
+    html+=`<tr class="${trCls}"><td class="ctr mono">${period}</td>
+      <td class="ctr" style="font-size:11px">${fmtDate(date)}</td>
+      <td class="mono">${fmtTH(pmt)}</td><td class="mono">${fmtTH(intAmt)}</td>
+      <td class="mono">${fmtTH(prinAmt)}</td><td class="mono">${fmtTH(balAfter)}</td>
+      <td class="ctr mono ${rCls}">${fmtTH(effRate,2)}%</td>
+      <td class="ctr sc">${badge}</td></tr>`;
+  });
+  $('l-amort-body').innerHTML=html;
+  $('l-amort-foot').textContent='แสดง '+sched.length+' งวด | แดง = ค้างชำระ | %/ปีจริง คำนวณจากวันจริงในรอบ';
+}
+function loan_renderAudit(){
+  const{sched,r,mRate}=loanData;
+  const paid=sched.filter(x=>x.paid);
+  if(!paid.length){$('l-audit-body').innerHTML='<tr><td colspan="8" class="ctr" style="color:var(--text2)">ไม่มีงวดที่ชำระแล้ว</td></tr>';return;}
+  const anomalies=[];
+  let html='';
+  paid.forEach(row=>{
+    const{period,date,intAmt,prevBal,effRate,actualDays}=row;
+    const stdInt=prevBal*mRate,diff=intAmt-stdInt;
+    const isAnom=Math.abs(effRate-r*100)>1.5;
+    if(isAnom)anomalies.push({period,effRate,actualDays});
+    const rCls=isAnom?'rate-anom':effRate>(r*100+0.5)?'rate-warn':'rate-ok';
+    html+=`<tr><td class="ctr mono">${period}</td>
+      <td class="ctr" style="font-size:11px">${fmtDate(date)}</td>
+      <td class="ctr" style="color:${actualDays>31?'var(--red)':actualDays<29?'var(--green)':'var(--text2)'}">
+        ${actualDays}${actualDays>31?' ⚠':''}</td>
+      <td class="mono">${fmtTH(intAmt)}</td>
+      <td class="mono" style="color:var(--text2)">${fmtTH(stdInt)}</td>
+      <td class="mono" style="color:${diff>50?'var(--red)':diff<-50?'var(--green)':'var(--text2)'}">${diff>=0?'+':''}${fmtTH(diff)}</td>
+      <td class="ctr mono ${rCls}">${fmtTH(effRate,2)}%</td>
+      <td class="ctr">${isAnom?'<span class="badge b-red">ผิดปกติ</span>':actualDays===29?'<span class="badge b-green">ก.พ.</span>':actualDays===31?'<span class="badge b-amber">31 วัน</span>':'<span class="badge b-blue">ปกติ</span>'}</td></tr>`;
+  });
+  $('l-audit-body').innerHTML=html;
+  $('l-audit-foot').textContent='มาตรฐาน '+fmtTH(r*100,2)+'%/ปี | แดง = อัตราต่างเกิน 1.5% จากสัญญา';
+  if(anomalies.length){
+    const a=$('l-audit-alert');a.style.display='block';
+    a.innerHTML=`<b>พบ ${anomalies.length} งวดผิดปกติ</b> — `+anomalies.map(x=>`งวด ${x.period}: ${fmtTH(x.effRate,2)}%/ปี (${x.actualDays} วัน)`).join(' | ')+
+      '<br><small>สาเหตุ: รอบแรกมีวันมากกว่าปกติ (Actual Days Method)</small>';
+  }
+}
+function loan_renderOverdue(){
+  const{lp,remBal,lastPayDate,odDays,odMonths,odInt,totalOwed,dailyInt,r,mRate,today,method}=loanData;
+  const mL=method==='compound'?'ทบต้นรายเดือน':method==='simple'?'อย่างง่าย':'ตามวันจริง';
+  $('l-overdue-content').innerHTML=`
+    <div class="alert alert-red">
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="text-align:center;min-width:70px">
+          <div style="font-size:34px;font-weight:700;color:var(--red);font-family:monospace">${fmtTH(odDays,0)}</div>
+          <div style="font-size:11px;color:#ff8080">วันค้างชำระ</div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#ffaaaa;margin-bottom:3px">ชำระล่าสุด: ${fmtDate(lastPayDate)} → ${fmtDate(today)}</div>
+          <div style="font-size:12px;color:#ff8080">เงินต้นคงค้าง: ${fmtTH(remBal)} บาท | ดอก ${fmtTH(dailyInt)}/วัน | ${mL}</div>
+        </div>
+      </div>
+    </div>
+    <div class="g3">
+      <div class="mc"><div class="ml">เงินต้นคงค้าง</div><div class="mv mono" style="color:var(--red)">${fmtTH(remBal)}</div></div>
+      <div class="mc"><div class="ml">ดอกเบี้ยค้าง</div><div class="mv mono" style="color:var(--amber)">${fmtTH(odInt)}</div></div>
+      <div class="mc"><div class="ml">ยอดหนี้รวม</div><div class="mv mono" style="color:var(--red)">${fmtTH(totalOwed)}</div></div>
+    </div>
+    <div class="card" style="margin-top:1rem">
+      <table>
+        <thead><tr><th class="lft">รายการ</th><th>จำนวน (บาท)</th><th>สูตร</th></tr></thead>
+        <tbody>
+          <tr><td class="lft">เงินต้นคงค้าง</td><td class="mono" style="color:var(--red)">${fmtTH(remBal)}</td><td style="font-size:11px;color:var(--text3)">วงเงิน − Σเงินต้น</td></tr>
+          <tr><td class="lft">ดอกค้าง (${mL})</td><td class="mono" style="color:var(--red)">${fmtTH(odInt)}</td><td style="font-size:11px;color:var(--text3)">${method==='compound'?'เงินต้น×(1+อัตรา/12)^เดือน−เงินต้น':'เงินต้น×อัตรา×วัน/365'}</td></tr>
+          <tr><td class="lft">ดอกรายวัน</td><td class="mono" style="color:var(--amber)">${fmtTH(dailyInt)}/วัน</td><td style="font-size:11px;color:var(--text3)">เงินต้น×อัตรา÷365</td></tr>
+          <tr class="tr-total big"><td class="lft">ยอดหนี้รวม ณ ${fmtDate(today)}</td><td class="mono" style="color:var(--red)">${fmtTH(totalOwed)}</td><td style="font-size:11px;color:var(--text3)">เงินต้น+ดอกค้าง</td></tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+function loan_reset(){
+  $('l-principal').value=600000;$('l-annualRate').value=20;$('l-payment').value=16000;
+  $('l-startDate').value='2023-09-10';$('l-totalPeriods').value=60;
+  $('l-lastPaid').value=18;$('l-calcDate').value='2026-03-16';
+  $('l-intMethod').value='compound';$('l-result').style.display='none';loanData=null;
+}
+
+/* ===== PAGE 3: 4-DEPARTMENT OPS ===== */
+function ops_calc(){
+  const rev1=parseFloat($('ops-rev1').value)||450;
+  const rev2=parseFloat($('ops-rev2').value)||500;
+
+  // Dept costs
+  const d1=( parseFloat($('d1-labor').value)||0 )+( parseFloat($('d1-equip').value)||0 )+( parseFloat($('d1-food').value)||0 );
+  const d2=( parseFloat($('d2-driver').value)||0 )+( parseFloat($('d2-fuel').value)||0 )+( parseFloat($('d2-machine').value)||0 )+( parseFloat($('d2-crew').value)||0 )+( parseFloat($('d2-food').value)||0 );
+  const d3=( parseFloat($('d3-driver').value)||0 )+( parseFloat($('d3-fuel').value)||0 )+( parseFloat($('d3-machine').value)||0 )+( parseFloat($('d3-food').value)||0 );
+  const d4=( parseFloat($('d4-driver').value)||0 )+( parseFloat($('d4-fuel').value)||0 )+( parseFloat($('d4-machine').value)||0 )+( parseFloat($('d4-toll').value)||0 )+( parseFloat($('d4-food').value)||0 );
+  const overhead=( parseFloat($('ops-mgmt').value)||0 )+( parseFloat($('ops-insurance').value)||0 );
+  const targetProfit=parseFloat($('ops-target').value)||0;
+  const totalCost=d1+d2+d3+d4+overhead;
+  const minPrice=totalCost+targetProfit;
+
+  // Update dept totals
+  [['d1-total',d1,'var(--green)'],['d2-total',d2,'var(--blue)'],['d3-total',d3,'var(--amber)'],['d4-total',d4,'var(--red)']].forEach(([id,val,col])=>{
+    const el=$(id); if(el){el.textContent=fmtTH(val)+' บ./ตัน'; el.style.color=col;}
+  });
+
+  const profit1=rev1-totalCost, profit2=rev2-totalCost;
+  const ip1=profit1>0, ip2=profit2>0;
+
+  const depts=[
+    {name:' สางใบอ้อย',cost:d1,color:'#3dd68c',pct:d1/totalCost*100},
+    {name:' ตัดอ้อย',cost:d2,color:'#4d9fff',pct:d2/totalCost*100},
+    {name:' โหลดอ้อย',cost:d3,color:'#f5c842',pct:d3/totalCost*100},
+    {name:' ขนส่ง',cost:d4,color:'#ff5f5f',pct:d4/totalCost*100},
+    {name:' ส่วนกลาง/บริหาร',cost:overhead,color:'var(--text2)',pct:overhead/totalCost*100},
+  ];
+
+  const verdictBlock=(rev,profit,label,year)=>{
+    const ip=profit>0,ie=Math.abs(profit)<=totalCost*0.03;
+    const vc=ip?'profit':ie?'warn':'loss';
+    const vt=ip?'<b>กำไร '+fmtTH(profit)+' บาท/ตัน</b>':ie?'<b>เกือบทุน</b>':'<b>ขาดทุน '+fmtTH(Math.abs(profit))+' บาท/ตัน</b>';
+    const pct=fmtTH(Math.abs(profit/totalCost*100),1);
+    return '<div class="verdict '+vc+'" style="margin-bottom:8px"><div class="verdict-icon">'+(ip?'':ie?'':'')+'</div><div style="flex:1"><div style="font-size:13px;font-weight:600">'+label+' — รับ '+fmtTH(rev)+' บาท/ตัน &nbsp;'+vt+'</div><div style="font-size:12px;opacity:.85;margin-top:2px">ต้นทุนรวม '+fmtTH(totalCost)+' บ./ตัน | '+(ip?'กำไร '+pct+'%':'ขาดทุน '+pct+'% ของต้นทุน')+'</div></div><div style="text-align:right;min-width:90px"><div style="font-size:22px;font-weight:700;font-family:monospace;color:'+(ip?'#3dd68c':ip?'#3dd68c':'#ff5f5f')+'">'+(profit>=0?'+':'')+fmtTH(profit)+'</div><div style="font-size:10px;color:var(--text3)">บาท/ตัน</div></div></div>';
+  };
+
+  // Bar chart data
+  const barRows=depts.map(d=>{
+    const w=totalCost>0?fmtTH(d.pct,1):0;
+    return '<tr><td class="lft" style="font-size:12px;padding:6px 8px">'+d.name+'</td><td class="mono" style="min-width:70px;color:'+d.color+'">'+fmtTH(d.cost)+'</td><td style="padding:6px 8px;min-width:140px"><div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:8px;background:var(--bg4);border-radius:4px;overflow:hidden"><div style="width:'+d.pct.toFixed(1)+'%;height:100%;background:'+d.color+';border-radius:4px"></div></div><span style="font-size:11px;min-width:36px;color:var(--text2)">'+fmtTH(d.pct,1)+'%</span></div></td></tr>';
+  }).join('');
+
+  // Price sensitivity: show profit at 420-560 range
+  const priceRange=[380,400,420,440,450,460,480,500,520,540,560];
+  const sensRows=priceRange.map(p=>{
+    const pf=p-totalCost;
+    const ip=pf>0;
+    return '<tr style="'+(p===450||p===500?'background:rgba(61,214,140,.08);font-weight:500':'')+'"><td class="ctr mono" style="color:'+(p===450?'#3dd68c':p===500?'#4d9fff':'var(--text2)')+'">'+p+(p===450?' (ปีแรก)':p===500?' (ตอ)':'')+'</td><td class="mono" style="color:var(--text2)">'+fmtTH(totalCost)+'</td><td class="mono" style="color:'+(ip?'#3dd68c':'#ff5f5f')+'">'+(pf>=0?'+':'')+fmtTH(pf)+'</td><td class="ctr"><div style="display:flex;align-items:center;gap:5px;justify-content:center"><div style="width:60px;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden"><div style="width:'+Math.min(100,Math.max(0,pf/totalCost*100+50)).toFixed(0)+'%;height:100%;background:'+(ip?'#3dd68c':'#ff5f5f')+';border-radius:3px"></div></div><span style="font-size:10px;color:'+(ip?'#3dd68c':'#ff5f5f')+'">'+(ip?'+':'')+fmtTH(pf/totalCost*100,1)+'%</span></div></td></tr>';
+  }).join('');
+
+  $('ops-results').innerHTML=
+    '<div class="sec-title" style="margin-top:1rem">ผลสรุป</div>'+
+    verdictBlock(rev1,profit1,'อ้อยปีแรก','y1')+
+    verdictBlock(rev2,profit2,'อ้อยตอ (ปี 2+)','y2')+
+
+    '<div class="g4" style="margin-bottom:1rem">'+
+      '<div class="mc"><div class="ml">ต้นทุนรวม 4 แผนก</div><div class="mv mono" style="color:var(--red)">'+fmtTH(totalCost)+'</div><div class="ms">บาท/ตัน</div></div>'+
+      '<div class="mc '+(ip1?'profit':'loss')+'"><div class="ml">กำไร อ้อยปีแรก</div><div class="mv">'+(profit1>=0?'+':'')+fmtTH(profit1)+'</div><div class="ms">รับ '+fmtTH(rev1)+' บ./ตัน</div></div>'+
+      '<div class="mc '+(ip2?'profit':'loss')+'"><div class="ml">กำไร อ้อยตอ</div><div class="mv">'+(profit2>=0?'+':'')+fmtTH(profit2)+'</div><div class="ms">รับ '+fmtTH(rev2)+' บ./ตัน</div></div>'+
+      '<div class="mc warn"><div class="ml">ราคาขั้นต่ำ (ทุน+กำไร)</div><div class="mv" style="color:var(--amber)">'+fmtTH(minPrice,0)+'</div><div class="ms">ต้องการ '+targetProfit+' บ./ตันกำไร</div></div>'+
+    '</div>'+
+
+    '<div class="sec-title">สัดส่วนต้นทุนแต่ละแผนก</div>'+
+    '<div class="card" style="padding:0;overflow:hidden"><table><thead><tr><th class="lft">แผนก</th><th>บาท/ตัน</th><th>สัดส่วน</th></tr></thead><tbody>'+
+      barRows+
+      '<tr class="tr-total"><td class="lft"><b>รวมทั้งหมด</b></td><td class="mono" style="color:var(--red)"><b>'+fmtTH(totalCost)+'</b></td><td></td></tr>'+
+    '</tbody></table></div>'+
+
+    '<div class="sec-title">วิเคราะห์ความไว (Price Sensitivity)</div>'+
+    '<div class="card" style="padding:0;overflow:hidden"><table><thead><tr><th>ราคาอ้อย (บ./ตัน)</th><th>ต้นทุนรวม</th><th>กำไร/ขาดทุน</th><th>% ของต้นทุน</th></tr></thead><tbody>'+sensRows+'</tbody></table><div class="foot-note" style="padding:8px 12px">แถวสีเขียว = ราคาตลาดปัจจุบัน | ต้องการราคา &ge; '+fmtTH(minPrice,0)+' บ./ตัน เพื่อกำไร '+targetProfit+' บ./ตัน</div></div>'+
+
+    '<div class="sec-title">ข้อแนะนำ</div>'+
+    '<div class="card"><div id="ops-rec"></div></div>';
+
+  // Recommendations
+  const rec=[];
+  if(!ip1&&!ip2) rec.push(' <b>ขาดทุนทั้งอ้อยปีแรกและอ้อยตอ</b> — ควรเจรจาขอราคาขั้นต่ำ <b>'+fmtTH(minPrice,0)+' บาท/ตัน</b>');
+  else if(!ip1) rec.push(' <b>อ้อยปีแรก '+fmtTH(rev1)+' บ./ตัน ขาดทุน '+fmtTH(Math.abs(profit1))+' บ./ตัน</b> — ควรเจรจาขอเพิ่ม หรือลดต้นทุนแผนกที่สูงสุด');
+  else rec.push('✅ <b>กำไรทั้งสองประเภท</b> — อ้อยปีแรก +'+fmtTH(profit1)+' บ./ตัน | อ้อยตอ +'+fmtTH(profit2)+' บ./ตัน');
+
+  // Biggest cost dept
+  const biggest=depts.slice(0,4).reduce((a,b)=>a.cost>b.cost?a:b);
+  rec.push(' <b>แผนกที่มีต้นทุนสูงสุด:</b> '+biggest.name+' ('+fmtTH(biggest.cost)+' บ./ตัน = '+fmtTH(biggest.pct,1)+'%) — ควรควบคุมให้ดีที่สุด');
+
+  const transportPct=d4/totalCost*100;
+  if(transportPct>35) rec.push(' ค่าขนส่งสูงถึง '+fmtTH(transportPct,1)+'% — พิจารณาเส้นทาง ระยะทาง หรือการวางแผนรอบการขน');
+  rec.push(' <b>ราคาขั้นต่ำที่ต้องได้:</b> ต้นทุน '+fmtTH(totalCost)+' + กำไรเป้า '+targetProfit+' = <b>'+fmtTH(minPrice,0)+' บาท/ตัน</b>');
+  rec.push(' ลูกค้านั่งรอรับเงิน — ต้นทุนทั้งหมดอยู่ที่ผู้รับเหมา ควรทำสัญญากำหนดราคาล่วงหน้าทุกฤดูกาล');
+
+  const recEl=$('ops-rec');
+  if(recEl) recEl.innerHTML=rec.map(r=>'<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;line-height:1.6">'+r+'</div>').join('');
+}
+
+/* ===== PAGE 4: CUSTOMER RECEIPT ===== */
+function cust_calc(){
+  const name = ($('cust-name').value||'').trim() || 'ลูกค้า';
+  const field = ($('cust-field').value||'').trim() || '—';
+  const type = parseInt($('cust-type').value);
+  const tons = parseFloat($('cust-tons').value)||0;
+  const dateVal = $('cust-date').value;
+  const price1 = parseFloat($('cust-price1').value)||450;
+  const price2 = parseFloat($('cust-price2').value)||500;
+  const d1 = parseFloat($('cust-d1').value)||0;
+  const d2 = parseFloat($('cust-d2').value)||0;
+  const d3 = parseFloat($('cust-d3').value)||0;
+  const d4 = parseFloat($('cust-d4').value)||0;
+  const dother = parseFloat($('cust-dother').value)||0;
+  const pricePerTon = type===1 ? price1 : price2;
+  const typeLabel = type===1 ? 'อ้อยปีแรก (ปลูกใหม่)' : 'อ้อยตอ (ปี 2 ขึ้นไป)';
+  const totalCostPerTon = d1+d2+d3+d4+dother;
+  const gross = tons * pricePerTon;
+  const deductTotal = tons * totalCostPerTon;
+  const deduct1 = tons*d1, deduct2=tons*d2, deduct3=tons*d3, deduct4=tons*d4, deductOther=tons*dother;
+  const net = gross - deductTotal;
+  const netPerTon = pricePerTon - totalCostPerTon;
+
+  let dateStr = '—';
+  if(dateVal){
+    const d=new Date(dateVal);
+    dateStr=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+(d.getFullYear()+543);
+  }
+
+  const today=new Date();
+  const printDate=String(today.getDate()).padStart(2,'0')+'/'+String(today.getMonth()+1).padStart(2,'0')+'/'+(today.getFullYear()+543);
+
+  const isProfit = net > 0;
+
+  $('cust-receipt-wrap').innerHTML =
+    '<div class="receipt">' +
+      '<div class="receipt-header">' +
+        '<div class="logo">&#127806;</div>' +
+        '<h2>S.W.BERNHARDT</h2>' +
+        '<p>ใบสรุปรายรับอ้อย — วันที่พิมพ์ '+printDate+'</p>' +
+      '</div>' +
+      '<div class="receipt-body">' +
+        '<div class="receipt-row"><span class="rl">&#128100; ชื่อลูกค้า</span><span class="rr">'+name+'</span></div>' +
+        '<div class="receipt-row"><span class="rl">&#127807; แปลงอ้อย</span><span class="rr">'+field+'</span></div>' +
+        '<div class="receipt-row"><span class="rl">&#9881; ประเภทอ้อย</span><span class="rr">'+typeLabel+'</span></div>' +
+        '<div class="receipt-row"><span class="rl">&#128197; วันที่ตัด</span><span class="rr">'+dateStr+'</span></div>' +
+        '<div class="receipt-divider"></div>' +
+        '<div class="receipt-row"><span class="rl">&#9878; น้ำหนักอ้อย</span><span class="rr">'+fmtTH(tons,2)+' <span style="font-size:11px;color:var(--text2)">ตัน</span></span></div>' +
+        '<div class="receipt-row"><span class="rl">&#128176; ราคาอ้อย</span><span class="rr">'+fmtTH(pricePerTon,0)+' <span style="font-size:11px;color:var(--text2)">บาท/ตัน</span></span></div>' +
+        '<div class="receipt-row"><span class="rl" style="font-weight:600">&#128181; รายรับรวม (Gross)</span><span class="rr" style="color:var(--blue)">'+fmtTH(gross,2)+' <span style="font-size:11px">บาท</span></span></div>' +
+        '<div class="receipt-divider"></div>' +
+        '<div class="receipt-row" style="align-items:flex-start"><span class="rl">&#9866; หักค่าเก็บเกี่ยว 4 แผนก<br>'+
+          '<div class="dept-mini">' +
+            '<div class="dept-mini-item"><span>สางใบ '+fmtTH(d1,0)+' บ./ต.</span><span style="color:var(--red)">'+fmtTH(deduct1,2)+'</span></div>' +
+            '<div class="dept-mini-item"><span>ตัด '+fmtTH(d2,0)+' บ./ต.</span><span style="color:var(--red)">'+fmtTH(deduct2,2)+'</span></div>' +
+            '<div class="dept-mini-item"><span>โหลด '+fmtTH(d3,0)+' บ./ต.</span><span style="color:var(--red)">'+fmtTH(deduct3,2)+'</span></div>' +
+            '<div class="dept-mini-item"><span>ขนส่ง '+fmtTH(d4,0)+' บ./ต.</span><span style="color:var(--red)">'+fmtTH(deduct4,2)+'</span></div>' +
+            (dother>0?'<div class="dept-mini-item"><span>อื่นๆ '+fmtTH(dother,0)+' บ./ต.</span><span style="color:var(--red)">'+fmtTH(deductOther,2)+'</span></div>':'') +
+          '</div>' +
+        '</span>' +
+        '<span class="rr negative">'+fmtTH(deductTotal,2)+' <span style="font-size:11px">บาท</span></span></div>' +
+        '<div class="receipt-row"><span class="rl" style="font-size:12px">รวมค่าหัก/ตัน</span><span class="rr" style="font-size:13px;color:var(--red)">'+fmtTH(totalCostPerTon,0)+' บาท/ตัน</span></div>' +
+        '<div class="receipt-divider"></div>' +
+        '<div class="receipt-total-row receipt-row">' +
+          '<span class="rl">&#128176; ลูกค้าได้รับสุทธิ</span>' +
+          '<span class="rr total">'+(net>=0?'':'-')+fmtTH(Math.abs(net),2)+' <span style="font-size:14px">บาท</span></span>' +
+        '</div>' +
+        '<div class="receipt-row" style="background:rgba(61,214,140,.04)"><span class="rl" style="font-size:12px">รายรับสุทธิต่อตัน</span><span class="rr" style="color:'+(netPerTon>=0?'var(--green)':'var(--red)')+'">'+fmtTH(netPerTon,2)+' บาท/ตัน</span></div>' +
+      '</div>' +
+    '</div>' +
+    '<button class="print-btn" onclick="window.print()">&#128424; พิมพ์ / บันทึก PDF</button>';
+}
+
+/* ===== COPYRIGHT ===== */
+document.getElementById("copy-year").textContent=new Date().getFullYear();
+
+/* ===== INIT ===== */
+sc_buildPresets();
+sc_calc();
+ops_calc();
+(function(){const d=new Date();$("cust-date").value=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");cust_calc();}());
+loan_calculate();
+</script>
+</body>
+</html>
